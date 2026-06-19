@@ -1,0 +1,86 @@
+name: Bude CEO
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'
+
+jobs:
+  ceo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure Git
+        run: |
+          git config user.name "Bude CEO"
+          git config user.email "ceo@bude-tech.ai"
+
+      - name: Validate state file before run
+        id: validate_state
+        run: |
+          if [ -f ceo/state.json ]; then
+            node -e "JSON.parse(require('fs').readFileSync('ceo/state.json'))" && echo "state_valid=true" >> $GITHUB_OUTPUT || echo "state_valid=false" >> $GITHUB_OUTPUT
+          else
+            echo "state_valid=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Backup critical files
+        if: steps.validate_state.outputs.state_valid == 'true'
+        run: |
+          mkdir -p ceo/backups
+          for file in ceo/state.json ceo/backlog.json; do
+            if [ -f "$file" ]; then
+              cp "$file" "ceo/backups/$(basename $file).$(date +%s).bak"
+            fi
+          done
+          ls -t ceo/backups/*.bak 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true
+
+      - name: Run CEO Brain
+        id: brain_run
+        run: node ceo/brain.js
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+
+      - name: Validate CEO output
+        if: steps.brain_run.outcome == 'success'
+        run: |
+          if [ -f ceo/state.json ]; then
+            node -e "JSON.parse(require('fs').readFileSync('ceo/state.json'))" || exit 1
+          fi
+          if [ ! -f "ceo/reports/run_${{ github.run_number }}.md" ]; then
+            echo "::error::Report not generated"
+            exit 1
+          fi
+          DELETED=$(git diff --cached --name-only --diff-filter=D 2>/dev/null | wc -l)
+          if [ "$DELETED" -gt 10 ]; then
+            echo "::error::Refusing to commit: $DELETED files deleted"
+            exit 1
+          fi
+
+      - name: Commit and push
+        if: steps.brain_run.outcome == 'success'
+        run: |
+          git add -A
+          git diff --cached --quiet || (git commit -m "CEO Run #${{ github.run_number }}" && git push)
+
+      - name: Log failure
+        if: failure()
+        run: |
+          echo "::error::CEO Run #${{ github.run_number }} failed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Run ${{ github.run_number }} failed" >> ceo/failure_log.txt
