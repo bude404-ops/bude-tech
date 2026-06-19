@@ -1,5 +1,5 @@
 {
-  "cycle": 2,
+  "cycle": 1,
   "phase": "init",
   "goal": "build self-funding solana-native SaaS",
   "graph": {},
@@ -7,7 +7,7 @@
     "alpha": 1,
     "beta": 1,
     "gamma": 1,
-    "revenue": 1.0201
+    "revenue": 1.01
   },
   "history": [
     {
@@ -15,212 +15,118 @@
       "choice": "solana monetization",
       "agent": "revenue",
       "success": true
-    },
-    {
-      "cycle": 2,
-      "choice": "solana monetization",
-      "agent": "revenue",
-      "success": true
     }
   ],
   "logs": [
     {
-      "t": 1781905787470,
-      "msg": "Starting BUDE CEO v26 — SOLANA-NATIVE MODE"
+      "t": 1781907963862,
+      "msg": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     },
     {
-      "t": 1781905787470,
-      "msg": "Wallet: SOLa0fcf05eace4a1333a7582ad6b8834ba44826811"
+      "t": 1781907963863,
+      "msg": "CYCLE 1 / 15"
     },
     {
-      "t": 1781905787470,
-      "msg": "Network: solana-devnet"
-    },
-    {
-      "t": 1781905787470,
-      "msg": "Explorer: https://explorer.solana.com/address/SOLa0fcf05eace4a1333a7582ad6b8834ba44826811?cluster=devnet"
-    },
-    {
-      "t": 1781905787470,
-      "msg": "Free tier: Groq LLM + GitHub Actions + GitHub Pages"
-    },
-    {
-      "t": 1781905787470,
-      "msg": "Upgrade threshold: 0.5 SOL"
-    },
-    {
-      "t": 1781905787470,
-      "msg": "Send SOL to fund the CEO. It will auto-buy better APIs."
-    },
-    {
-      "t": 1781905787481,
-      "msg": "cycle 1"
-    },
-    {
-      "t": 1781905787481,
+      "t": 1781907963863,
       "msg": "Revenue: 0 SOL"
     },
     {
-      "t": 1781905787481,
+      "t": 1781907963863,
       "msg": "Wallet: SOLa0fcf05eace4a1333a7582ad6b8834ba44826811"
     },
     {
-      "t": 1781905787481,
+      "t": 1781907963863,
       "msg": "Network: solana-devnet"
     },
     {
-      "t": 1781905787481,
-      "msg": "chosen: solana monetization by revenue"
+      "t": 1781907963863,
+      "msg": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     },
     {
-      "t": 1781905787481,
+      "t": 1781907963863,
+      "msg": "🎯 Chosen: solana monetization by revenue (score: 12.0)"
+    },
+    {
+      "t": 1781907963863,
       "msg": "Using FREE API: Groq"
     },
     {
-      "t": 1781905787482,
-      "msg": "Groq failed: https is not defined"
+      "t": 1781907963968,
+      "msg": "Groq failed: The model `llama3-8b-8192` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead."
     },
     {
-      "t": 1781905787482,
+      "t": 1781907963968,
       "msg": "Using template fallback"
     },
     {
-      "t": 1781905787483,
+      "t": 1781907963969,
       "msg": "Using FREE API: Groq"
     },
     {
-      "t": 1781905787483,
-      "msg": "Groq failed: https is not defined"
+      "t": 1781907964014,
+      "msg": "Groq failed: The model `llama3-8b-8192` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead."
     },
     {
-      "t": 1781905787484,
+      "t": 1781907964014,
       "msg": "Using template fallback"
     },
     {
-      "t": 1781905787484,
+      "t": 1781907964014,
       "msg": "Using FREE API: Groq"
     },
     {
-      "t": 1781905787484,
-      "msg": "Groq failed: https is not defined"
+      "t": 1781907964107,
+      "msg": "Groq failed: The model `llama3-8b-8192` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead."
     },
     {
-      "t": 1781905787484,
+      "t": 1781907964107,
       "msg": "Using template fallback"
     },
     {
-      "t": 1781905787484,
-      "msg": "write backend/payments.js"
+      "t": 1781907964107,
+      "msg": "write backend/payments.js (980 chars)"
     },
     {
-      "t": 1781905787485,
-      "msg": "write frontend/pricing.html"
+      "t": 1781907964108,
+      "msg": "write frontend/pricing.html (3908 chars)"
     },
     {
-      "t": 1781905787485,
-      "msg": "write frontend/wallet.html"
+      "t": 1781907964108,
+      "msg": "write frontend/wallet.html (3908 chars)"
     },
     {
-      "t": 1781905787485,
+      "t": 1781907964108,
+      "msg": "OK: backend/server.js (292 chars)"
+    },
+    {
+      "t": 1781907964108,
+      "msg": "OK: backend/health.js (68 chars)"
+    },
+    {
+      "t": 1781907964108,
+      "msg": "OK: frontend/index.html (259 chars)"
+    },
+    {
+      "t": 1781907964108,
       "msg": "revenue rep up: 1.010"
     },
     {
-      "t": 1781905787486,
-      "msg": "dashboard.html generated"
+      "t": 1781907964110,
+      "msg": "dashboard.html generated (11921 chars)"
     },
     {
-      "t": 1781905788753,
-      "msg": "pushed"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "cycle 2"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Revenue: 0 SOL"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Wallet: SOLa0fcf05eace4a1333a7582ad6b8834ba44826811"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Network: solana-devnet"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "chosen: solana monetization by revenue"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Using FREE API: Groq"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Groq failed: https is not defined"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Using template fallback"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Using FREE API: Groq"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Groq failed: https is not defined"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Using template fallback"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Using FREE API: Groq"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Groq failed: https is not defined"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "Using template fallback"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "write backend/payments.js"
-    },
-    {
-      "t": 1781905789965,
-      "msg": "write frontend/pricing.html"
-    },
-    {
-      "t": 1781905789966,
-      "msg": "write frontend/wallet.html"
-    },
-    {
-      "t": 1781905789966,
-      "msg": "revenue rep up: 1.020"
-    },
-    {
-      "t": 1781905789966,
-      "msg": "dashboard.html generated"
-    },
-    {
-      "t": 1781905790904,
+      "t": 1781907965402,
       "msg": "pushed"
     }
   ],
   "memory": {
     "failures": {},
     "successes": {
-      "solana monetization": 2
+      "solana monetization": 1
     },
     "revenue": 0,
     "paidAPIs": [],
     "upgrades": []
   },
-  "started": 1781905787469
+  "started": 1781907963851
 }
