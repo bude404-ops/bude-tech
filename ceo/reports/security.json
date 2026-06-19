@@ -1,0 +1,10 @@
+{
+  "scanned": 9,
+  "issues": [
+    {
+      "file": "./ceo/brain.js",
+      "issue": "eval()"
+    }
+  ],
+  "time": "2026-06-19T00:55:50.957Z"
+}

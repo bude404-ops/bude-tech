@@ -1,1 +1,3 @@
-# Bude-Tech
+# Bude Tech
+
+Autonomous AI company.
