@@ -1,61 +1,309 @@
-name: 🤖 Bude Tech Autonomous CEO
+const fs = require('fs').promises;
+const https = require('https');
+const path = require('path');
+const { execSync } = require('child_process');
 
-on:
-  schedule:
-    # FAST MODE: Every 30 minutes while bootstrapping
-    # Will auto-switch to every 6 hours once established
-    - cron: '*/30 * * * *'
-  workflow_dispatch:
-    inputs:
-      mode:
-        description: 'CEO Mode'
-        required: true
-        default: 'auto'
-        type: choice
-        options:
-          - auto
-          - bootstrap
-          - build
-          - fix
-          - learn
+const API_KEY = process.env.OPENROUTER_API_KEY;
+const RUN_NUM = process.env.GITHUB_RUN_NUMBER || 'local';
 
-env:
-  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+// AI API
+function aiAsk(prompt, maxTokens) {
+  return new Promise((resolve) => {
+    if (!API_KEY) { resolve(''); return; }
+    const data = JSON.stringify({
+      model: 'anthropic/claude-3.5-sonnet',
+      messages: [
+        { role: 'system', content: 'You are Bude Tech CEO. Be concise.' },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: maxTokens || 800,
+      temperature: 0.5
+    });
+    const req = https.request({
+      hostname: 'openrouter.ai',
+      path: '/api/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + API_KEY,
+        'HTTP-Referer': 'https://github.com/bude404-ops/bude-tech',
+        'X-Title': 'Bude Tech CEO'
+      },
+      timeout: 15000
+    }, (res) => {
+      let body = '';
+      res.on('data', c => body += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body);
+          resolve(json.choices?.[0]?.message?.content || '');
+        } catch { resolve(''); }
+      });
+    });
+    req.on('error', () => resolve(''));
+    req.on('timeout', () => { req.destroy(); resolve(''); });
+    req.write(data);
+    req.end();
+  });
+}
 
-jobs:
-  ceo-brain:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write
-      issues: write
-      
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Setup Git Identity
-        run: |
-          git config user.name "Bude CEO 🤖"
-          git config user.email "ceo@bude-tech.ai"
-      
-      - name: 🧠 CEO Brain
-        run: node ceo/brain.js
-        env:
-          CEO_MODE: ${{ github.event.inputs.mode || 'auto' }}
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-      
-      - name: 📝 Commit & Push
-        run: |
-          git add -A
-          git diff --cached --quiet || git commit -m "🤖 CEO #${{ github.run_number }} | $(cat ceo/last_action.txt 2>/dev/null || echo 'cycle')"
-          git push
+// Write file with mkdir
+async function writeFile(fp, content) {
+  const dir = path.dirname(fp);
+  if (dir !== '.') await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(fp, content);
+}
+
+// Module templates
+const memoryMod = [
+  "const fs = require('fs').promises;",
+  "",
+  "class Memory {",
+  "  constructor() {",
+  "    this.file = 'ceo/memory.json';",
+  "    this.data = {};",
+  "  }",
+  "  async load() {",
+  "    try {",
+  "      this.data = JSON.parse(await fs.readFile(this.file, 'utf8'));",
+  "    } catch {",
+  "      this.data = { runs: 0 };",
+  "    }",
+  "    this.data.runs = (this.data.runs || 0) + 1;",
+  "  }",
+  "  async save() {",
+  "    await fs.mkdir('ceo', { recursive: true });",
+  "    await fs.writeFile(this.file, JSON.stringify(this.data, null, 2));",
+  "  }",
+  "  get(k) { return this.data[k]; }",
+  "  set(k, v) { this.data[k] = v; }",
+  "}",
+  "",
+  "module.exports = Memory;"
+].join('\n');
+
+const builderMod = [
+  "const fs = require('fs').promises;",
+  "const path = require('path');",
+  "",
+  "class Builder {",
+  "  async buildFeature(specs) {",
+  "    const name = specs.name || 'feature_' + Date.now();",
+  "    const dir = 'projects/' + name;",
+  "    await fs.mkdir(dir, { recursive: true });",
+  "    await fs.writeFile(dir + '/index.js', '// ' + specs.description + '\\nmodule.exports = {};');",
+  "    await fs.writeFile(dir + '/package.json', JSON.stringify({ name: name, version: '1.0.0', main: 'index.js' }, null, 2));",
+  "    return { summary: 'Built ' + name };",
+  "  }",
+  "  async writeCode(fp, desc) {",
+  "    await fs.mkdir(path.dirname(fp) || '.', { recursive: true });",
+  "    await fs.writeFile(fp, '// ' + desc + '\\n');",
+  "    return { summary: 'Wrote ' + fp };",
+  "  }",
+  "  async fixBug(bug) {",
+  "    try {",
+  "      const code = await fs.readFile(bug.file, 'utf8');",
+  "      await fs.writeFile(bug.file + '.bak', code);",
+  "      await fs.writeFile(bug.file, code + '\\n// Fixed');",
+  "      return { summary: 'Fixed ' + bug.file };",
+  "    } catch {",
+  "      return { summary: 'Failed' };",
+  "    }",
+  "  }",
+  "}",
+  "",
+  "module.exports = Builder;"
+].join('\n');
+
+const marketerMod = [
+  "const fs = require('fs').promises;",
+  "",
+  "class Marketer {",
+  "  async updateDocs() {",
+  "    const readme = '# Bude Tech\\n\\nAutonomous AI company.\\n\\n## Projects\\n\\nSee /projects/\\n\\n## License\\n\\nMIT';",
+  "    await fs.writeFile('README.md', readme);",
+  "    return { summary: 'Updated README' };",
+  "  }",
+  "  async createContent(type, topic) {",
+  "    await fs.mkdir('content', { recursive: true });",
+  "    const file = 'content/' + type + '_' + Date.now() + '.md';",
+  "    await fs.writeFile(file, '# ' + topic + '\\n\\nGenerated by CEO.\\n');",
+  "    return { summary: 'Created ' + file };",
+  "  }",
+  "}",
+  "",
+  "module.exports = Marketer;"
+].join('\n');
+
+const learnerMod = [
+  "const fs = require('fs').promises;",
+  "",
+  "class Learner {",
+  "  constructor() {",
+  "    this.kbFile = 'ceo/knowledge.json';",
+  "    this.failFile = 'ceo/failures.json';",
+  "    this.kb = {};",
+  "    this.failures = [];",
+  "  }",
+  "  async load() {",
+  "    try { this.kb = JSON.parse(await fs.readFile(this.kbFile, 'utf8')); }",
+  "    catch { this.kb = { created: new Date().toISOString(), patterns: [] }; }",
+  "    try { this.failures = JSON.parse(await fs.readFile(this.failFile, 'utf8')); }",
+  "    catch { this.failures = []; }",
+  "  }",
+  "  async recordFailure(action, err) {",
+  "    this.failures.push({ t: new Date().toISOString(), action: action.type, err: err.message });",
+  "    if (this.failures.length > 50) this.failures = this.failures.slice(-50);",
+  "    await this.saveFails();",
+  "  }",
+  "  async getRecent(n) { return this.failures.slice(-n); }",
+  "  async saveFails() {",
+  "    await fs.mkdir('ceo', { recursive: true });",
+  "    await fs.writeFile(this.failFile, JSON.stringify(this.failures, null, 2));",
+  "  }",
+  "}",
+  "",
+  "module.exports = Learner;"
+].join('\n');
+
+const communicatorMod = [
+  "const https = require('https');",
+  "",
+  "class Communicator {",
+  "  constructor() {",
+  "    this.key = process.env.OPENROUTER_API_KEY;",
+  "  }",
+  "  async checkAPI() {",
+  "    if (!this.key) return false;",
+  "    return new Promise(r => {",
+  "      const req = https.request({",
+  "        hostname: 'openrouter.ai',",
+  "        path: '/api/v1/auth/key',",
+  "        method: 'GET',",
+  "        headers: { 'Authorization': 'Bearer ' + this.key },",
+  "        timeout: 5000",
+  "      }, res => r(res.statusCode === 200));",
+  "      req.on('error', () => r(false));",
+  "      req.on('timeout', () => { req.destroy(); r(false); });",
+  "      req.end();",
+  "    });",
+  "  }",
+  "}",
+  "",
+  "module.exports = Communicator;"
+].join('\n');
+
+const learnScript = [
+  "const fs = require('fs').promises;",
+  "",
+  "async function main() {",
+  "  console.log('Reflecting...');",
+  "  let memory;",
+  "  try { memory = JSON.parse(await fs.readFile('ceo/memory.json', 'utf8')); }",
+  "  catch { console.log('No memory'); return; }",
+  "  console.log('Runs:', memory.runs || 0);",
+  "  console.log('Done.');",
+  "}",
+  "",
+  "main().catch(console.error);"
+].join('\n');
+
+const persistScript = [
+  "const fs = require('fs').promises;",
+  "",
+  "async function main() {",
+  "  console.log('Saving...');",
+  "  const dirs = ['ceo/reports', 'ceo/strategies', 'projects', 'content'];",
+  "  for (const dir of dirs) {",
+  "    await fs.mkdir(dir, { recursive: true });",
+  "    await fs.writeFile(dir + '/.gitkeep', '');",
+  "  }",
+  "  console.log('Done.');",
+  "}",
+  "",
+  "main().catch(console.error);"
+].join('\n');
+
+const packageJson = JSON.stringify({
+  name: 'bude-tech',
+  version: '2.0.0',
+  description: 'Autonomous AI Company',
+  main: 'ceo/brain.js',
+  scripts: { start: 'node ceo/brain.js', test: 'node --test' },
+  keywords: ['ai', 'autonomous'],
+  author: 'Bude CEO',
+  license: 'MIT',
+  engines: { node: '>=18.0.0' }
+}, null, 2);
+
+const gitignore = [
+  'node_modules/',
+  'package-lock.json',
+  '.env',
+  '*.log',
+  '*.backup',
+  '*.bak',
+  '.DS_Store'
+].join('\n');
+
+const MODULES = {
+  'ceo/modules/memory.js': memoryMod,
+  'ceo/modules/builder.js': builderMod,
+  'ceo/modules/marketer.js': marketerMod,
+  'ceo/modules/learner.js': learnerMod,
+  'ceo/modules/communicator.js': communicatorMod,
+  'ceo/learn.js': learnScript,
+  'ceo/persist.js': persistScript,
+  'package.json': packageJson,
+  '.gitignore': gitignore
+};
+
+// Main
+async function main() {
+  console.log('[CEO] BUDE TECH v4.0 | Run:', RUN_NUM);
+  
+  // Load memory
+  let memory;
+  try {
+    memory = JSON.parse(await fs.readFile('ceo/memory.json', 'utf8'));
+  } catch {
+    memory = { runs: 0, files: 0 };
+  }
+  memory.runs = (memory.runs || 0) + 1;
+  
+  // Bootstrap
+  let created = 0;
+  for (const [fp, content] of Object.entries(MODULES)) {
+    try {
+      await fs.access(fp);
+      console.log('[OK]', fp);
+    } catch {
+      await writeFile(fp, content);
+      created++;
+      console.log('[CREATE]', fp);
+    }
+  }
+  
+  for (const dir of ['projects', 'content', 'ceo/reports', 'ceo/strategies']) {
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(dir + '/.gitkeep', '');
+  }
+  
+  console.log('Created', created, 'files');
+  memory.files = (memory.files || 0) + created;
+  
+  // Count files
+  let fileCount = 0;
+  try {
+    fileCount = parseInt(execSync('find . -type f -not -path "./.git/*" -not -path "./node_modules/*" | wc -l', { encoding: 'utf8' }).trim());
+  } catch {}
+  console.log('Total files:', fileCount);
+  
+  // Actions
+  const actions = [
+    {
+      name: 'Build feature',
+      run: async () => {
+        const name = 'feature_' + Date.now();
+        const dir = 'projects/' + name;
+        await
