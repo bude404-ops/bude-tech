@@ -11,6 +11,7 @@ jobs:
     timeout-minutes: 8
     permissions:
       contents: write
+      workflows: write
     steps:
       - uses: actions/checkout@v4
         with:
