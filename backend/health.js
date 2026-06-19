@@ -1,2 +1,1 @@
-
-module.exports = () => "OK";
+module.exports = () => ({ status: 'OK', uptime: process.uptime() });
