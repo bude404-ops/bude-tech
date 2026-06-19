@@ -3,8 +3,7 @@ name: Bude CEO
 on:
   workflow_dispatch:
   schedule:
-  - cron: '*/30 * * * *'   # FAST: every 30 min while bootstrapping
-
+    - cron: '*/30 * * * *'
 
 jobs:
   ceo:
@@ -12,7 +11,6 @@ jobs:
     timeout-minutes: 8
     permissions:
       contents: write
-      workflows: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,9 +27,5 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
       - run: |
-          git add -A
-          git stash || true
-          git pull --rebase origin main || true
-          git stash pop || true
           git add -A
           git diff --cached --quiet || (git commit -m "CEO #${{ github.run_number }}" && git push)
