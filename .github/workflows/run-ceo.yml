@@ -1,4 +1,4 @@
-name: BUDE CEO V23
+name: BUDE CEO V26
 
 on:
   schedule:
@@ -31,10 +31,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Run V23 Engine
-        run: node v23.js
+      - name: Run V26 Engine
+        run: node v26.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
