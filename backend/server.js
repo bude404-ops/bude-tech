@@ -1,8 +1,8 @@
-
 const express = require('express');
 const app = express();
-app.use(express.json());
 
-app.get('/', (req,res)=>res.json({ok:true}));
+app.get('/', (req, res) => res.json({ ok: true, time: Date.now() }));
+app.get('/health', (req, res) => res.json({ status: 'up' }));
 
-app.listen(3000,()=>console.log('server running'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log('Server on port', PORT));
