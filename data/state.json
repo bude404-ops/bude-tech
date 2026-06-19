@@ -1,26 +1,42 @@
 {
-  "cycle": 9,
+  "cycle": 14,
   "phase": "devops",
   "backlog": [
     {
-      "id": "6ca0d247-eb81-4071-a9da-3bb055339e0b",
-      "name": "api core",
-      "impact": 8,
-      "complexity": 5,
+      "id": "76b43022-3320-49d1-a7cb-129ec7404ef0",
+      "name": "frontend shell",
+      "impact": 6,
+      "complexity": 4,
       "files": {
-        "backend/server.js": "const express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => res.json({ ok: true, time: Date.now() }));\napp.get('/health', (req, res) => res.json({ status: 'up' }));\n\nconst PORT = process.env.PORT || 3000;\napp.listen(PORT, () => console.log('Server on port', PORT));"
+        "frontend/index.html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>BUDE</title></head>\n<body><h1>BUDE APP</h1><div id=\"status\">Loading...</div><script src=\"app.js\"></script></body>\n</html>",
+        "frontend/app.js": "document.addEventListener('DOMContentLoaded', () => {\n  const status = document.getElementById('status');\n  fetch('/health').then(r => r.json()).then(d => { status.textContent = 'Server: ' + d.status; status.style.color = '#4caf50'; })\n    .catch(() => { status.textContent = 'Server: offline'; status.style.color = '#ff9800'; });\n});",
+        "frontend/style.css": "* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; }\n#status { padding: 1rem; background: #1a1a1a; border-radius: 8px; }",
+        "frontend/sw.js": "const CACHE = 'bude-v1';\nconst URLS = ['/', '/app.js', '/style.css'];\nself.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS))));\nself.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));"
       },
       "status": "done",
       "tasks": [
         {
-          "file": "backend/server.js",
-          "content": "const express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => res.json({ ok: true, time: Date.now() }));\napp.get('/health', (req, res) => res.json({ status: 'up' }));\n\nconst PORT = process.env.PORT || 3000;\napp.listen(PORT, () => console.log('Server on port', PORT));"
+          "file": "frontend/index.html",
+          "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>BUDE</title></head>\n<body><h1>BUDE APP</h1><div id=\"status\">Loading...</div><script src=\"app.js\"></script></body>\n</html>"
+        },
+        {
+          "file": "frontend/app.js",
+          "content": "document.addEventListener('DOMContentLoaded', () => {\n  const status = document.getElementById('status');\n  fetch('/health').then(r => r.json()).then(d => { status.textContent = 'Server: ' + d.status; status.style.color = '#4caf50'; })\n    .catch(() => { status.textContent = 'Server: offline'; status.style.color = '#ff9800'; });\n});"
+        },
+        {
+          "file": "frontend/style.css",
+          "content": "* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; }\n#status { padding: 1rem; background: #1a1a1a; border-radius: 8px; }"
+        },
+        {
+          "file": "frontend/sw.js",
+          "content": "const CACHE = 'bude-v1';\nconst URLS = ['/', '/app.js', '/style.css'];\nself.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS))));\nself.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));"
         }
       ]
     }
   ],
   "completed": [
-    "auth system"
+    "auth system",
+    "api core"
   ],
   "logs": [
     {
@@ -90,14 +106,60 @@
     {
       "t": 1781898596424,
       "msg": "cycle 9 | phase qa"
+    },
+    {
+      "t": 1781898597632,
+      "msg": "cycle 10 | phase devops"
+    },
+    {
+      "t": 1781898598605,
+      "msg": "pushed"
+    },
+    {
+      "t": 1781898599818,
+      "msg": "cycle 11 | phase init"
+    },
+    {
+      "t": 1781898599818,
+      "msg": "selected feature: frontend shell (score 8)"
+    },
+    {
+      "t": 1781898601041,
+      "msg": "cycle 12 | phase architect"
+    },
+    {
+      "t": 1781898602276,
+      "msg": "cycle 13 | phase builder"
+    },
+    {
+      "t": 1781898602276,
+      "msg": "write frontend/index.html"
+    },
+    {
+      "t": 1781898602276,
+      "msg": "write frontend/app.js"
+    },
+    {
+      "t": 1781898602276,
+      "msg": "write frontend/style.css"
+    },
+    {
+      "t": 1781898602276,
+      "msg": "write frontend/sw.js"
+    },
+    {
+      "t": 1781898603485,
+      "msg": "cycle 14 | phase qa"
     }
   ],
   "memory": {
     "builtFeatures": {
-      "auth system": true
+      "auth system": true,
+      "api core": true
     },
     "scoreHistory": {
-      "auth system": 1
+      "auth system": 1,
+      "api core": 1
     }
   },
   "started": 1781898585758
