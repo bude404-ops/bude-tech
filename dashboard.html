@@ -8,7 +8,6 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #050508; color: #e0e0e0; min-height: 100vh; }
-    
     .hero { background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a0a 100%); padding: 3rem 2rem; text-align: center; position: relative; overflow: hidden; }
     .hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, #9945ff11 0%, transparent 70%); animation: pulse 8s ease-in-out infinite; }
     @keyframes pulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 0.8; } }
@@ -21,16 +20,13 @@
     .hero-badge.purple { background: #9945ff22; border-color: #9945ff44; color: #9945ff; }
     .hero-badge.green { background: #14f19522; border-color: #14f19544; color: #14f195; }
     .hero-badge.orange { background: #ff980022; border-color: #ff980044; color: #ff9800; }
-    
     .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
-    
     .card { background: linear-gradient(145deg, #111118, #0a0a12); border: 1px solid #1a1a2e; border-radius: 20px; padding: 1.5rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
     .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, #9945ff44, transparent); }
     .card:hover { transform: translateY(-4px); border-color: #9945ff33; box-shadow: 0 20px 40px #9945ff0a; }
     .card h3 { color: #14f195; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
     .card h3 .icon { font-size: 1.2rem; }
-    
     .stat { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid #ffffff08; }
     .stat:last-child { border-bottom: none; }
     .stat .label { color: #888; font-size: 0.9rem; }
@@ -40,43 +36,30 @@
     .value.running { color: #ff9800; }
     .value.solana { color: #9945ff; }
     .value.money { color: #14f195; }
-    
     .progress-bar { height: 6px; background: #1a1a2e; border-radius: 3px; margin-top: 0.5rem; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, #9945ff, #14f195); border-radius: 3px; transition: width 0.5s ease; }
-    
     .wallet-box { background: #0a0a12; border: 1px solid #30363d; border-radius: 12px; padding: 1rem; font-family: 'SF Mono', monospace; word-break: break-all; color: #9945ff; font-size: 0.8rem; margin: 1rem 0; position: relative; }
     .wallet-box .copy-btn { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: #9945ff22; border: 1px solid #9945ff44; color: #9945ff; padding: 0.2rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.7rem; }
     .wallet-box .copy-btn:hover { background: #9945ff44; }
-    
     .qr { text-align: center; padding: 1.5rem 0; }
     .qr svg { filter: drop-shadow(0 0 20px #9945ff33); }
     .qr-label { font-size: 0.75rem; color: #666; margin-top: 0.75rem; }
-    
     .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
     .badge.done { background: #14f19522; color: #14f195; border: 1px solid #14f19544; }
     .badge.fail { background: #f4433622; color: #f44336; border: 1px solid #f4433644; }
     .badge.solana { background: #9945ff22; color: #9945ff; border: 1px solid #9945ff44; }
     .badge.money { background: #14f19522; color: #14f195; border: 1px solid #14f19544; }
-    
     .log { font-size: 0.8rem; color: #888; padding: 0.5rem 0; border-bottom: 1px solid #ffffff08; display: flex; align-items: center; gap: 0.5rem; }
     .log:last-child { border-bottom: none; }
     .log .time { color: #555; font-family: monospace; font-size: 0.75rem; min-width: 2.5rem; }
     .log .agent { color: #9945ff; font-weight: 500; }
-    
     .file-tree { font-family: 'SF Mono', monospace; font-size: 0.8rem; color: #666; line-height: 1.8; white-space: pre; background: #0a0a12; padding: 1rem; border-radius: 12px; border: 1px solid #1a1a2e; }
-    
     .footer { text-align: center; color: #444; font-size: 0.8rem; padding: 3rem 2rem; border-top: 1px solid #1a1a2e; margin-top: 2rem; }
     .footer a { color: #9945ff; text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
-    
     .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.4rem; background: linear-gradient(135deg, #9945ff, #14f195); color: #000; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-top: 0.5rem; }
     .btn:hover { opacity: 0.9; transform: scale(1.02); }
-    
-    @media (max-width: 600px) { 
-      .hero h1 { font-size: 1.6rem; } 
-      .container { padding: 1rem; } 
-      .grid { gap: 1rem; }
-    }
+    @media (max-width: 600px) { .hero h1 { font-size: 1.6rem; } .container { padding: 1rem; } .grid { gap: 1rem; } }
   </style>
 </head>
 <body>
@@ -91,7 +74,6 @@
       </div>
     </div>
   </div>
-
   <div class="container">
     <div class="grid">
       <div class="card">
@@ -102,7 +84,6 @@
         <div class="stat"><span class="label">Cycles</span><span class="value">3 / 15</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div>
       </div>
-
       <div class="card">
         <h3><span class="icon">💜</span> Solana Revenue</h3>
         <div class="stat"><span class="label">SOL Earned</span><span class="value solana">0.0000 SOL</span></div>
@@ -111,7 +92,6 @@
         <div class="stat"><span class="label">Status</span><span class="value running">BUILDING</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
       </div>
-
       <div class="card">
         <h3><span class="icon">🔐</span> CEO Wallet</h3>
         <div class="wallet-box">SOLa0fcf05eace4a1333a7582ad6b8834ba44826811<button class="copy-btn" onclick="navigator.clipboard.writeText('SOLa0fcf05eace4a1333a7582ad6b8834ba44826811')">Copy</button></div>
@@ -134,7 +114,6 @@
         <p style="font-size:0.75rem;color:#555;margin-top:0.5rem">Network: solana-devnet</p>
         <a href="https://explorer.solana.com/address/SOLa0fcf05eace4a1333a7582ad6b8834ba44826811?cluster=devnet" target="_blank" class="btn">View on Explorer →</a>
       </div>
-
       <div class="card">
         <h3><span class="icon">🤖</span> Agent Reputation</h3>
         <div class="stat"><span class="label">Alpha (API)</span><span class="value">1.000</span></div>
@@ -142,20 +121,17 @@
         <div class="stat"><span class="label">Gamma (Stability)</span><span class="value">1.000</span></div>
         <div class="stat"><span class="label">Revenue</span><span class="value solana">1.030</span></div>
       </div>
-
       <div class="card">
         <h3><span class="icon">📜</span> Build History</h3>
         <div class="log"><span class="time">C1</span><span class="agent">revenue</span>→ solana monetization <span class="badge done">OK</span></div><div class="log"><span class="time">C2</span><span class="agent">revenue</span>→ solana monetization <span class="badge done">OK</span></div><div class="log"><span class="time">C3</span><span class="agent">revenue</span>→ solana monetization <span class="badge done">OK</span></div>
         
       </div>
-
       <div class="card">
         <h3><span class="icon">🚀</span> Upgrades</h3>
         <div class="log">No paid APIs yet. Fund wallet to unlock GPT-4, Claude, etc.</div>
         
         
       </div>
-      
       <div class="card" style="grid-column: 1 / -1;">
         <h3><span class="icon">📁</span> Generated Files</h3>
         <div class="file-tree">📦 Project Structure
@@ -166,6 +142,7 @@
 │   ├── 📄 health.js
 │   ├── 📄 payments.js
 │   └── 📄 server.js
+├── 📄 ceo.js
 ├── 📄 dashboard.html
 ├── 📁 data
 │   ├── 📄 solana-wallet.json
@@ -198,13 +175,11 @@
 │           └── 📁 dotenvx
 │               └── 📄 SKILL.md
 ├── 📄 package-lock.json
-├── 📄 package.json
-└── 📄 v26.js
+└── 📄 package.json
 </div>
       </div>
     </div>
   </div>
-
   <div class="footer">
     <p>Built autonomously by BUDE CEO v26 • <a href="https://github.com/bude404-ops/Bude-Tech">View Source</a></p>
     <p style="margin-top:0.5rem;color:#333">Wallet: SOLa0fcf05eace4a1333a7582ad6b8834ba44826811</p>
