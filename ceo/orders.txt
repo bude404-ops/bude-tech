@@ -1,0 +1,21 @@
+# CEO ORDERS
+
+## Priority Task: Build Interactive Dashboard
+
+Create a mobile-friendly web dashboard that:
+- Shows real-time CEO status (run history, current plan, company health)
+- Displays files created, features built, security audit results
+- Has a "Send Order" button so I can give the CEO new tasks
+- Auto-refreshes every 30 seconds
+- Works perfectly on phone screens
+- Uses only HTML/CSS/JS (no frameworks, no build step)
+- Serves from GitHub Pages (static site in /dashboard folder)
+
+The dashboard should read from:
+- ceo/memory.json (company state)
+- ceo/reports/ (run history)
+- ceo/orders.txt (my commands)
+
+Style: Dark theme, clean, emoji icons, Bude Tech branding.
+
+Deploy: Create index.html in /dashboard and set up GitHub Pages.
