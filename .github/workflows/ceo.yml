@@ -1,0 +1,44 @@
+name: BUDE CEO v26 — Autonomous Build
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['ceo.js', '.github/workflows/**']
+
+concurrency:
+  group: bude-ceo-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run CEO
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          mkdir -p data
+          node ceo.js || true
+
+      - name: Commit & push
+        run: |
+          git config user.name "CEO BOT"
+          git config user.email "bot@bude-tech.io"
+          git add -A
+          git diff --cached --quiet || git commit -m "🤖 CEO build $(date -u +%H:%M) | run ${{ github.run_number }}"
+          git push origin main
