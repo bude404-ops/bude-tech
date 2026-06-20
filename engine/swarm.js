@@ -3,6 +3,31 @@ const path = require("path");
 
 /**
  * ─────────────────────────────────────────
+ * LOGGING SYSTEM (NEW)
+ * ─────────────────────────────────────────
+ */
+const LOG_FILE = "agent-log.json";
+
+function log(step, data) {
+  const entry = {
+    time: new Date().toISOString(),
+    step,
+    data
+  };
+
+  let logs = [];
+  if (fs.existsSync(LOG_FILE)) {
+    logs = JSON.parse(fs.readFileSync(LOG_FILE, "utf8"));
+  }
+
+  logs.push(entry);
+  fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2));
+
+  console.log(`[${step}]`, data);
+}
+
+/**
+ * ─────────────────────────────────────────
  * MEMORY SYSTEM
  * ─────────────────────────────────────────
  */
@@ -12,10 +37,8 @@ function loadMemory() {
   } catch {
     return {
       runs: 0,
-      passes: 0,
-      failures: 0,
-      critique_hits: 0,
-      repair_actions: 0,
+      success: 0,
+      failure: 0,
       score: 0.5
     };
   }
@@ -27,143 +50,135 @@ function saveMemory(m) {
 
 /**
  * ─────────────────────────────────────────
- * AGENTS
+ * SAFE FILE WRITER (FIXED ROOT ISSUE)
  * ─────────────────────────────────────────
  */
+function writeFileSafe(file, content) {
+  const safePath = path.join(process.cwd(), file); // 🔥 FIX: ensures repo root
 
-const Planner = {
-  run(task) {
-    return {
-      goal: task,
-      architecture: task.toLowerCase().includes("dashboard")
-        ? "dashboard-app"
-        : "generic-app"
-    };
+  const dir = path.dirname(safePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
-};
 
-const Builder = {
-  run(plan) {
-    return [{
-      file: "app/page.jsx",
+  fs.writeFileSync(safePath, content);
+  log("WRITE_FILE", { file: safePath });
+}
+
+/**
+ * ─────────────────────────────────────────
+ * PLANNER (DETERMINISTIC FOR STABILITY)
+ * ─────────────────────────────────────────
+ */
+function planner(task) {
+  log("PLANNER_INPUT", task);
+
+  const t = task.toLowerCase();
+
+  let plan = {
+    goal: task,
+    type: "generic",
+    files: []
+  };
+
+  if (t.includes("dashboard")) {
+    plan.type = "dashboard";
+    plan.files.push("app/dashboard/page.jsx");
+  } else if (t.includes("fix")) {
+    plan.type = "fix";
+    plan.files.push("app/error.jsx");
+  } else {
+    plan.files.push("app/page.jsx");
+  }
+
+  log("PLANNER_OUTPUT", plan);
+  return plan;
+}
+
+/**
+ * ─────────────────────────────────────────
+ * GENERATOR
+ * ─────────────────────────────────────────
+ */
+function generate(plan) {
+  log("GENERATOR_START", plan);
+
+  const files = plan.files.map(f => {
+    return {
+      file: f,
       content: `
 export default function Page(){
-  return <div>Built: ${plan.goal}</div>;
+  return (
+    <div>
+      <h1>BUDE AGENT OUTPUT</h1>
+      <p>Task: ${plan.goal}</p>
+      <p>Type: ${plan.type}</p>
+    </div>
+  );
 }
 `
-    }];
-  }
-};
-
-const Critic = {
-  run(files) {
-    let issues = [];
-
-    for (const f of files) {
-      if (!f.content.includes("return")) {
-        issues.push("Missing return in component");
-      }
-      if (f.content.length < 50) {
-        issues.push("Too small / incomplete code");
-      }
-    }
-
-    return {
-      passed: issues.length === 0,
-      issues
     };
-  }
-};
+  });
 
-const Tester = {
-  run(files) {
-    let pass = true;
-
-    for (const f of files) {
-      if (f.content.includes("undefined")) pass = false;
-      if (f.content.length < 30) pass = false;
-    }
-
-    return pass;
-  }
-};
-
-const Repair = {
-  run(files, critique) {
-    if (critique.passed) return files;
-
-    return files.map(f => ({
-      ...f,
-      content: `
-export default function Fixed(){
-  return <div>Auto-repaired safe output</div>;
+  log("GENERATOR_OUTPUT", files);
+  return files;
 }
-`
-    }));
-  }
-};
 
 /**
  * ─────────────────────────────────────────
- * WRITER
+ * SIMPLE VALIDATION
  * ─────────────────────────────────────────
  */
-function write(file, content) {
-  const dir = path.dirname(file);
-  if (dir) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(file, content);
+function validate(files) {
+  return files.map(f => ({
+    ...f,
+    valid: f.content.includes("return")
+  }));
 }
 
 /**
  * ─────────────────────────────────────────
- * SWARM ORCHESTRATION LOOP
+ * MAIN LOOP
  * ─────────────────────────────────────────
  */
 function run(task) {
-  let memory = loadMemory();
+  log("RUN_START", task);
 
-  // 1. PLAN
-  const plan = Planner.run(task);
-  console.log("PLAN:", plan);
+  const memory = loadMemory();
 
-  // 2. BUILD
-  let files = Builder.run(plan);
-  console.log("BUILT FILES:", files.length);
+  // PLAN
+  const plan = planner(task);
 
-  // 3. CRITIQUE
-  const critique = Critic.run(files);
-  console.log("CRITIQUE:", critique);
+  // GENERATE
+  let files = generate(plan);
 
-  // 4. TEST
-  const testResult = Tester.run(files);
-  console.log("TEST:", testResult);
+  // VALIDATE
+  files = validate(files);
+  log("VALIDATION", files);
 
-  // 5. REPAIR (if needed)
-  if (!critique.passed || !testResult) {
-    files = Repair.run(files, critique);
-    memory.repair_actions++;
-  }
-
-  // 6. WRITE OUTPUT
+  // WRITE
   for (const f of files) {
-    write(f.file, f.content);
-    console.log("CREATED:", f.file);
+    if (f.valid) {
+      writeFileSafe(f.file, f.content);
+    } else {
+      log("SKIP_INVALID", f.file);
+    }
   }
 
-  // 7. MEMORY UPDATE
+  // MEMORY UPDATE
   memory.runs++;
 
-  if (critique.passed && testResult) {
-    memory.passes++;
+  if (files.every(f => f.valid)) {
+    memory.success++;
   } else {
-    memory.failures++;
+    memory.failure++;
   }
 
-  memory.score = memory.passes / (memory.runs || 1);
+  memory.score = memory.success / memory.runs;
 
   saveMemory(memory);
 
-  console.log("MEMORY:", memory);
+  log("RUN_COMPLETE", memory);
 }
 
 const task = process.argv.slice(2).join(" ");
