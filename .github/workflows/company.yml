@@ -1,0 +1,87 @@
+name: BUDE CTO System v31 (Groq Autonomous Engine)
+
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  cto-system:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─────────────────────────────────────
+      # 1. Checkout repo
+      # ─────────────────────────────────────
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────
+      # 2. Setup Node
+      # ─────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ─────────────────────────────────────
+      # 3. Install dependencies
+      # ─────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          npm install groq-sdk
+
+      # ─────────────────────────────────────
+      # 4. Run AI CTO ENGINE (Groq)
+      # ─────────────────────────────────────
+      - name: Run BUDE CTO Engine
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          echo "Starting CTO system..."
+          node engine/company.js "$GITHUB_EVENT_PATH"
+
+      # ─────────────────────────────────────
+      # 5. Verify output files exist (debug safety)
+      # ─────────────────────────────────────
+      - name: Verify output
+        run: |
+          echo "Checking generated files..."
+          ls -R
+
+      # ─────────────────────────────────────
+      # 6. Upload state (debug + memory tracking)
+      # ─────────────────────────────────────
+      - name: Upload Company State
+        uses: actions/upload-artifact@v4
+        with:
+          name: company-state
+          path: company-state.json
+
+      # ─────────────────────────────────────
+      # 7. Create Pull Request automatically
+      # ─────────────────────────────────────
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "🧠 BUDE CTO Autonomous Build (Groq v31)"
+          body: |
+            Automated CTO system execution via Groq AI.
+            
+            - CTO planning executed
+            - Product spec generated
+            - Engineering build applied
+            - QA review completed
+            - State updated
+            
+            This PR was generated automatically by BUDE CTO v31 system.
+          branch: "cto-autonomous-${{ github.run_id }}"
+          base: main
+          commit-message: "feat: autonomous CTO build cycle"
+          add-paths: |
+            .
