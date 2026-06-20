@@ -3,7 +3,6 @@ name: BUDE CEO v26 — Autonomous Build
 on:
   schedule:
     - cron: '0 */4 * * *'
-    - cron: '30 */4 * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -29,21 +28,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Skip if recently ran
-        id: check
-        run: |
-          LAST_RUN=$(git log -1 --format=%ct --grep="CEO build" || echo "0")
-          NOW=$(date +%s)
-          DIFF=$((NOW - LAST_RUN))
-          if [ "$DIFF" -lt "7200" ]; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-            echo "Ran ${DIFF}s ago. Skipping."
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Run CEO
-        if: steps.check.outputs.skip != 'true'
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
@@ -51,10 +36,9 @@ jobs:
           node ceo.js || true
 
       - name: Commit & push
-        if: steps.check.outputs.skip != 'true'
         run: |
           git config user.name "CEO BOT"
           git config user.email "bot@bude-tech.io"
           git add -A
-          git diff --cached --quiet || git commit -m "🤖 CEO build $(date -u +%H:%M) UTC"
+          git diff --cached --quiet || git commit -m "🤖 CEO build $(date -u +%H:%M) UTC | run ${{ github.run_number }}"
           git push origin main
