@@ -1,0 +1,41 @@
+name: BUDE TECH OS Autonomous Agent
+
+on:
+  workflow_dispatch:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (if any)
+        run: npm install || true
+
+      - name: Extract issue text
+        run: |
+          echo "PROMPT=$(jq -r .issue.title $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+
+      - name: Run Brain
+        run: node engine/brain.js "$PROMPT"
+
+      - name: Commit changes
+        run: |
+          git config user.name "bude-agent"
+          git config user.email "bude-agent@users.noreply.github.com"
+          git add .
+          git commit -m "🤖 AI Agent Update" || echo "No changes"
+          git push
