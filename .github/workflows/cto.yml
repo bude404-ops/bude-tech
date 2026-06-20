@@ -1,0 +1,42 @@
+name: BUDE Autonomous Software Factory v24
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+jobs:
+  factory:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install || true
+
+      - name: Extract Task
+        run: |
+          echo "TASK=$(jq -r .issue.title $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+
+      - name: Run Software Factory Brain
+        run: node engine/brain.js "$TASK"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "🏭 BUDE Software Factory v24 Output"
+          body: "Auto-generated full software architecture system"
+          branch: "factory-${{ github.run_id }}"
+          base: main
