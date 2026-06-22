@@ -4,7 +4,7 @@ export const CONFIG = {
 
   GITHUB_OWNER: bude404-ops,
   GITHUB_REPO: Bude-Tech,
-  GITHUB_TOKEN: ,
+  GITHUB_TOKEN: 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,
 
   SOLANA_WALLET: AnJDRjTaxtRbqYazSkRjLm1Y2jSfuCmHJhygKiNyrKmx,
 
