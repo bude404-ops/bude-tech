@@ -1,4 +1,0 @@
-=== V14 REVENUE ENGINE ===
-Revenue layer ready (Solana integration pending)
-Wallet system configured externally via frontend
-No private keys stored in repo (secure design)
