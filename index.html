@@ -1,166 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>BudE Tech v9 SaaS Factory</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BudE Tech V14 Revenue Layer</title>
 </head>
 
 <body style="font-family:Arial;background:#0b1220;color:white;padding:16px;">
 
-<h2>🚀 BudE Tech v9 — SaaS Factory Engine</h2>
+<h2>💰 BudE Tech V14 — Revenue Layer</h2>
 
-<button onclick="generateIdeas()">Generate SaaS Ideas</button>
-<button onclick="generateFactory()">Generate SaaS Factory Build Plan</button>
+<p>Status: <span id="premiumStatus"></span></p>
 
-<h3>📦 SaaS Queue</h3>
-<div id="queue"></div>
+<button onclick="simulatePayment()">
+  🔓 Unlock Premium (0.05 SOL test)
+</button>
 
-<h3>🧠 System Log</h3>
-<pre id="log" style="white-space:pre-wrap;background:#111827;padding:12px;"></pre>
+<br><br>
 
-<script>
+<button onclick="getPremiumFeature()">
+  🚀 Use Premium Feature
+</button>
 
-// =========================
-// 🧠 MEMORY
-// =========================
-
-let queue = JSON.parse(localStorage.getItem("v9_queue") || "[]");
-let log = JSON.parse(localStorage.getItem("v9_log") || "[]");
-
-function save() {
-  localStorage.setItem("v9_queue", JSON.stringify(queue));
-  localStorage.setItem("v9_log", JSON.stringify(log));
-}
-
-// =========================
-// 💡 IDEA ENGINE
-// =========================
-
-function generateIdeas() {
-
-  const ideas = [
-    {
-      name: "FarmOps AI",
-      desc: "AI farm management system for small farms",
-      monetization: "$10/mo subscription"
-    },
-    {
-      name: "LocalBiz AutoSite",
-      desc: "Auto-generates websites for local businesses",
-      monetization: "$15/mo"
-    },
-    {
-      name: "AI Inventory Tracker",
-      desc: "Simple inventory system with AI forecasting",
-      monetization: "$8/mo"
-    }
-  ];
-
-  ideas.forEach(i => {
-    queue.push({
-      id: Date.now() + Math.random(),
-      type: "SaaS_IDEA",
-      ...i,
-      status: "pending_build"
-    });
-  });
-
-  log.push({ time: Date.now(), event: "ideas_generated" });
-  save();
-  render();
-}
-
-// =========================
-// 🏗 FACTORY ENGINE
-// =========================
-
-function generateFactory() {
-
-  queue.push({
-    id: Date.now(),
-    type: "FACTORY_BUILD",
-    name: "Universal SaaS Generator",
-    steps: [
-      "create folder structure",
-      "generate landing page",
-      "generate pricing page",
-      "generate config.json",
-      "create deploy workflow"
-    ],
-    status: "pending_build"
-  });
-
-  log.push({ time: Date.now(), event: "factory_build_created" });
-  save();
-  render();
-}
-
-// =========================
-// ✔ APPROVE
-// =========================
-
-function approve(id) {
-
-  const item = queue.find(q => q.id === id);
-  if (!item) return;
-
-  item.status = "APPROVED_FOR_GITHUB_ACTION";
-
-  log.push({ time: Date.now(), event: "approved", item });
-
-  save();
-  render();
-}
-
-// =========================
-// ❌ REJECT
-// =========================
-
-function reject(id) {
-
-  queue = queue.filter(q => q.id !== id);
-
-  log.push({ time: Date.now(), event: "rejected", id });
-
-  save();
-  render();
-}
-
-// =========================
-// 📊 RENDER
-// =========================
-
-function render() {
-
-  const q = document.getElementById("queue");
-  const l = document.getElementById("log");
-
-  q.innerHTML = "";
-
-  queue.forEach(item => {
-
-    const div = document.createElement("div");
-    div.style = "background:#1f2937;margin:8px 0;padding:10px;border-radius:8px;";
-
-    div.innerHTML = `
-      <b>${item.name}</b><br>
-      Type: ${item.type}<br>
-      Status: ${item.status}<br>
-      Monetization: ${item.monetization || "N/A"}<br><br>
-
-      <button onclick="approve(${item.id})">✔ Approve Build</button>
-      <button onclick="reject(${item.id})">❌ Reject</button>
-    `;
-
-    q.appendChild(div);
-  });
-
-  l.innerText = JSON.stringify(log.slice(-10), null, 2);
-}
-
-render();
-
-</script>
+<script src="revenue.js"></script>
 
 </body>
 </html>
