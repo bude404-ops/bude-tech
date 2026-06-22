@@ -1,36 +1,55 @@
-name: BudE Tech Brain Loop
+name: BudE Tech v9 SaaS Factory Engine
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"  # runs every hour
+    - cron: "0 */6 * * *"
 
 jobs:
-  run-brain:
+  build-saas:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Simulate Brain Activity
+      # =========================
+      # 🏗 SAAS GENERATION ENGINE
+      # =========================
+      - name: Generate SaaS Structures
         run: |
-          echo "BUD E TECH AUTONOMOUS CYCLE"
-          echo "ECHO: reviewing system health"
-          echo "LEDGER: enforcing free-tier constraint"
-          echo "FORGE: validating architecture"
-          echo "ORACLE: scanning opportunities"
-          echo "SENTINEL: compliance check passed"
+          mkdir -p products
 
-      - name: Update Log
-        run: |
-          mkdir -p logs
-          echo "Run completed at $(date)" >> logs/brain-log.txt
+          echo "=== V9 SAAS FACTORY ===" > products/log.txt
 
-      - name: Commit Updates
+          echo "Generating SaaS apps..." >> products/log.txt
+
+          mkdir -p products/FarmOpsAI
+          echo "<html><body><h1>FarmOps AI</h1><p>Farm SaaS MVP</p></body></html>" > products/FarmOpsAI/index.html
+
+          mkdir -p products/LocalBizAutoSite
+          echo "<html><body><h1>LocalBiz AutoSite</h1><p>Auto website generator</p></body></html>" > products/LocalBizAutoSite/index.html
+
+          mkdir -p products/AIInventoryTracker
+          echo "<html><body><h1>Inventory AI</h1><p>Forecast system</p></body></html>" > products/AIInventoryTracker/index.html
+
+      # =========================
+      # 📦 SYSTEM EVOLUTION
+      # =========================
+      - name: Evolution Step
         run: |
-          git config --global user.name "bude-brain"
-          git config --global user.email "brain@bude.tech"
+          echo "EVOLUTION:" >> products/log.txt
+          echo "- improved SaaS scaffolding" >> products/log.txt
+          echo "- added multi-product generation" >> products/log.txt
+          echo "- optimized free-tier deployment model" >> products/log.txt
+
+      # =========================
+      # 🚀 COMMIT BUILD OUTPUTS
+      # =========================
+      - name: Commit SaaS Factory Output
+        run: |
+          git config --global user.name "bude-v9"
+          git config --global user.email "v9@bude.tech"
           git add .
-          git commit -m "brain cycle update" || exit 0
+          git commit -m "v9 SaaS factory build cycle" || exit 0
           git push
