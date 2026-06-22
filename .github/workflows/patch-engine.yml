@@ -1,0 +1,31 @@
+name: Patch Engine
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "patch-*.json"
+
+jobs:
+  apply-patch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply Patch File
+        run: |
+          echo "Detecting patch files..."
+
+          for file in patch-*.json; do
+            echo "Processing $file"
+            cat $file
+          done
+
+      - name: Commit Patch Update
+        run: |
+          git config user.name "bude-patch-engine"
+          git config user.email "patch@bude.tech"
+          git add .
+          git commit -m "applied patch update" || exit 0
+          git push
