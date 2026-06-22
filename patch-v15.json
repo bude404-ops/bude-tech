@@ -1,0 +1,27 @@
+{
+  "version": "v15",
+  "description": "Telegram AI Brain + SaaS Compiler Upgrade",
+
+  "changes": [
+    {
+      "file": "telegram-controller.js",
+      "type": "replace_function",
+      "target": "handleCommand",
+      "content": "export async function handleCommand(cmd) { cmd = cmd.toLowerCase(); if(cmd.startsWith('build')) { return buildSaaS(cmd); } if(cmd.includes('deploy')) { return triggerGitHub('deploy'); } return 'ok'; }"
+    },
+
+    {
+      "file": "engine.yml",
+      "type": "append_step",
+      "content": "- name: V15 Patch Loader\n  run: echo 'Applying V15 upgrade layer'"
+    },
+
+    {
+      "file": "config.js",
+      "type": "add_field",
+      "content": {
+        "MODE": "V15_PATCH_SYSTEM"
+      }
+    }
+  ]
+}
