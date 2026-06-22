@@ -1,0 +1,104 @@
+name: BudE Swarm Evolution Engine V4
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  swarm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # =========================
+      # 🧠 LOAD MEMORY
+      # =========================
+      - name: Load Memory
+        run: |
+          if [ ! -f memory.json ]; then
+            echo '{"cycles":[],"best_patterns":[],"failed_patterns":[],"last_score_avg":0}' > memory.json
+          fi
+
+      # =========================
+      # 🧠 GENERATE SWARM IDEAS
+      # =========================
+      - name: Generate Ideas
+        run: |
+          echo "Farm SaaS Builder" > ideas.txt
+          echo "Inventory System" >> ideas.txt
+          echo "CRM Micro App" >> ideas.txt
+
+      # =========================
+      # 🏗 BUILD SIMULATED OUTPUTS
+      # =========================
+      - name: Build Outputs
+        run: |
+          mkdir -p swarm_output
+
+          for i in 1 2 3
+          do
+            mkdir -p swarm_output/app_$i
+            echo "<h1>App $i</h1>" > swarm_output/app_$i/index.html
+            echo "console.log('app $i')" > swarm_output/app_$i/app.js
+          done
+
+      # =========================
+      # 📊 SCORE SYSTEM
+      # =========================
+      - name: Score Outputs
+        run: |
+          echo '{
+            "app_1": 80,
+            "app_2": 55,
+            "app_3": 90
+          }' > scores.json
+
+      # =========================
+      # 🧠 EVOLUTION LOGIC
+      # =========================
+      - name: Update Memory (Learning Loop)
+        run: |
+          node -e "
+            const fs = require('fs');
+
+            let memory = JSON.parse(fs.readFileSync('memory.json','utf8'));
+            let scores = JSON.parse(fs.readFileSync('scores.json','utf8'));
+
+            let total = 0;
+            let count = 0;
+
+            for (let app in scores) {
+              total += scores[app];
+              count++;
+
+              if (scores[app] >= 80) {
+                memory.best_patterns.push(app);
+              }
+
+              if (scores[app] < 60) {
+                memory.failed_patterns.push(app);
+              }
+
+              memory.cycles.push({
+                app,
+                score: scores[app]
+              });
+            }
+
+            memory.last_score_avg = total / count;
+
+            fs.writeFileSync('memory.json', JSON.stringify(memory, null, 2));
+          "
+
+      # =========================
+      # 📦 COMMIT RESULTS
+      # =========================
+      - name: Commit Evolution
+        run: |
+          git config user.name "bude-swarm-v4"
+          git config user.email "swarm@bude.tech"
+          git add .
+          git commit -m "v4 swarm evolution cycle" || exit 0
+          git push
