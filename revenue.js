@@ -1,6 +1,6 @@
 const CONFIG = {
   priceSOL: 0.05,
-  wallet: "YOUR_SOLANA_WALLET_ADDRESS"
+  wallet: AnJDRjTaxtRbqYazSkRjLm1Y2jSfuCmHJhygKiNyrKmx
 };
 
 let premium = localStorage.getItem("premium") === "true";
