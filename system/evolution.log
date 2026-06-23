@@ -273,3 +273,12 @@
 [2026-06-23T18:11:48.086619] [INFO] Upgraded: agents/new_crypto_analyst_agent_requirements.txt
 [2026-06-23T18:11:48.086696] [INFO] SELF-UPGRADED: agents/crypto_analyst_agent.py
 [2026-06-23T18:11:48.087210] [INFO] === Complete | Upgraded: 1 | Dashboard locked ===
+[2026-06-23T18:12:02.800871] [INFO] === BudE Evolution | bude404-ops/Bude-Tech | DASHBOARD LOCKED ===
+[2026-06-23T18:12:02.802655] [INFO] Prompt: 3710 chars
+[2026-06-23T18:12:02.802712] [INFO] Trying: llama-3.3-70b-versatile
+[2026-06-23T18:12:02.969127] [WARN] llama-3.3-70b-versatile failed: 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
+[2026-06-23T18:12:02.969836] [INFO] Trying: llama-3.1-8b-instant
+[2026-06-23T18:12:03.348846] [INFO] Success: llama-3.1-8b-instant
+[2026-06-23T18:12:03.349273] [INFO] Upgraded: agents/new_crypto_analyst_agent.py
+[2026-06-23T18:12:03.349357] [INFO] SELF-UPGRADED: agents/new_crypto_analyst_agent.py, api.py
+[2026-06-23T18:12:03.349901] [INFO] === Complete | Upgraded: 1 | Dashboard locked ===
