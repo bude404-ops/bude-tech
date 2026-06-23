@@ -1,0 +1,136 @@
+name: BudE Evolution Engine v0.2
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Run AI Evolution
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python << 'EOF'
+import os
+import json
+import requests
+from datetime import datetime
+
+# Load brain
+with open("brain.md","r") as f:
+    brain = f.read()
+
+# Scan repo
+files = []
+for root, dirs, fs in os.walk("."):
+    if ".git" in root:
+        continue
+    for file in fs:
+        files.append(os.path.join(root,file))
+
+state = {
+    "files": files[:200],
+    "file_count": len(files),
+    "time": str(datetime.utcnow())
+}
+
+# Build prompt for AI
+prompt = f"""
+You are BudE evolution engine.
+
+BRAIN:
+{brain}
+
+REPOSITORY STATE:
+{json.dumps(state, indent=2)}
+
+TASK:
+Return JSON ONLY with this format:
+
+{{
+  "actions": [
+    {{
+      "type": "create_file",
+      "path": "path/to/file",
+      "content": "file content here"
+    }}
+  ],
+  "reasoning": "why changes are needed"
+}}
+
+Rules:
+- Only valid JSON
+- No markdown
+- Keep changes minimal and safe
+"""
+
+# Call Groq (free tier)
+api_key = os.environ.get("GROQ_API_KEY")
+
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
+
+payload = {
+    "model": "llama-3.1-70b-versatile",
+    "messages": [
+        {"role": "system", "content": "You are a precise code generation engine."},
+        {"role": "user", "content": prompt}
+    ],
+    "temperature": 0.4
+}
+
+response = requests.post(
+    "https://api.groq.com/openai/v1/chat/completions",
+    headers=headers,
+    json=payload
+)
+
+result = response.json()
+
+content = result["choices"][0]["message"]["content"]
+
+try:
+    data = json.loads(content)
+except:
+    print("AI returned invalid JSON")
+    print(content)
+    exit(0)
+
+# Apply actions
+for action in data.get("actions", []):
+    if action["type"] == "create_file":
+        os.makedirs(os.path.dirname(action["path"]), exist_ok=True)
+        with open(action["path"], "w") as f:
+            f.write(action["content"])
+
+# Commit
+if data.get("actions"):
+    os.system("git config user.name 'bude-ai'")
+    os.system("git config user.email 'bude@ai.system'")
+    os.system("git add .")
+    os.system("git commit -m 'BudE evolution v0.2 update'")
+    os.system("git push")
+
+print("Evolution complete")
+EOF
+
+      - run: echo "Done"
