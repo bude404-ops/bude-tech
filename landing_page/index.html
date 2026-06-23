@@ -1,1 +1,15 @@
-<html><body><h1>Crypto Signals Newsletter</h1><p>Subscribe now and get daily AI-generated trading signals!</p><button id='subscribe-button'>Subscribe with Solana Pay</button><script src='https://solana-pay.github.io/solana-pay.js'></script><script>const payButton = document.getElementById('subscribe-button');payButton.addEventListener('click', async () => {const response = await fetch('/subscribe', {method: 'POST'});if (response.ok) {console.log('Subscription successful!');} else {console.error('Error subscribing:', response.statusText);}});</script></body></html>
+<html>
+<head>
+    <title>Crypto Signals Newsletter</title>
+</head>
+<body>
+    <h1>Crypto Signals Newsletter</h1>
+    <button id='subscribe-button'>Subscribe</button>
+    <script>
+        const subscribeButton = document.getElementById('subscribe-button');
+        subscribeButton.addEventListener('click', () => {
+            window.location.href = 'https://pay.solanabeach.io/AnJDRjTaxtRbqYazSkRjLm1Y2jSfuCmHJhygKiNyrKmx';
+        });
+    </script>
+</body>
+</html>
