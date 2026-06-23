@@ -1,7 +1,6 @@
 const GITHUB_USER = "bude404-ops";
 const GITHUB_REPO = "Bude-Tech";
 const GITHUB_FULL = "bude404-ops/Bude-Tech";
-const API_BASE = window.location.origin;
 
 let autoWorkInterval = null;
 let isAutoWorking = false;
@@ -13,9 +12,6 @@ function switchTab(tabId) {
     document.getElementById(tabId).classList.add('active');
     event.target.classList.add('active');
     
-    if (tabId === 'status') loadStatus();
-    if (tabId === 'memory') loadMemory();
-    if (tabId === 'tasks') loadTasks();
     if (tabId === 'evolution') loadEvolution();
 }
 
@@ -60,9 +56,6 @@ async function runEvolutionCycle() {
             simulateLocalEvolution();
         }
         
-        loadStatus();
-        loadTasks();
-        
     } catch (e) {
         addChatMsg('bude', `Cycle error: ${e.message}`);
     }
@@ -93,7 +86,6 @@ async function triggerGitHubWorkflow() {
 function simulateLocalEvolution() {
     const tasks = [
         "Analyze current repo structure",
-        "Identify missing dashboard components",
         "Plan next agent module",
         "Review evolution logs for errors",
         "Optimize existing code"
@@ -128,32 +120,15 @@ function handleCommand(cmd) {
         case 'help':
             addChatMsg('bude', `BUDĒ COMMANDS:
 /help — show commands
-/status — refresh system status
-/memory — view memory.json
 /evolve — trigger single evolution cycle
 /auto — toggle auto work mode
 /task <desc> — queue new task
-/tasks — view task list
-/agent <type> — request agent module
-/crypto <wallet> — analyze Solana wallet
-/log — show evolution story
 /focus <area> — set priority: agents, crypto, self, bugs, business
-/clean — purge old logs
 /token <key> — store GitHub token
 /repo — open GitHub repo
+/log — show evolution story
+/clean — purge old logs
 /clear — clear chat`);
-            break;
-            
-        case 'status':
-            loadStatus();
-            switchTab('status');
-            addChatMsg('bude', 'System status refreshed.');
-            break;
-            
-        case 'memory':
-            loadMemory();
-            switchTab('memory');
-            addChatMsg('bude', 'Memory loaded.');
             break;
             
         case 'evolve':
@@ -174,50 +149,11 @@ function handleCommand(cmd) {
             addChatMsg('bude', `Task queued: "${args}"`);
             break;
             
-        case 'tasks':
-            loadTasks();
-            switchTab('tasks');
-            addChatMsg('bude', 'Task list loaded.');
-            break;
-            
-        case 'agent':
-            if (!args) {
-                addChatMsg('bude', 'Usage: /agent <coder|researcher|architect|crypto|all>');
-                return;
-            }
-            queueCommand('agent', args);
-            addChatMsg('bude', `Agent request queued: ${args}`);
-            break;
-            
-        case 'crypto':
-            if (!args) {
-                addChatMsg('bude', 'Usage: /crypto <wallet_address>');
-                return;
-            }
-            queueCommand('crypto', args);
-            addChatMsg('bude', `Crypto analysis queued for: ${args}`);
-            break;
-            
-        case 'log':
-            loadEvolution();
-            switchTab('evolution');
-            addChatMsg('bude', 'Evolution story loaded.');
-            break;
-            
-        case 'clean':
-            purgeOldLogs();
-            addChatMsg('bude', 'Old logs purged. Evolution log cleaned.');
-            break;
-            
         case 'focus':
             if (!args) {
                 addChatMsg('bude', `Usage: /focus <area>
 Areas: agents, crypto, self, bugs, business
 Example: /focus business`);
-                return;
-            }
-            if (args === 'dashboard') {
-                addChatMsg('bude', 'Dashboard is locked. Use /focus agents, crypto, self, bugs, or business.');
                 return;
             }
             queueCommand('focus', args);
@@ -230,12 +166,23 @@ Example: /focus business`);
                 return;
             }
             localStorage.setItem('github_token', args);
-            addChatMsg('bude', 'GitHub token stored. Auto-work can now trigger real workflows.');
+            addChatMsg('bude', 'GitHub token stored.');
             break;
             
         case 'repo':
             window.open(`https://github.com/${GITHUB_FULL}`, '_blank');
             addChatMsg('bude', `Opening https://github.com/${GITHUB_FULL}`);
+            break;
+            
+        case 'log':
+            loadEvolution();
+            switchTab('evolution');
+            addChatMsg('bude', 'Evolution story loaded.');
+            break;
+            
+        case 'clean':
+            purgeOldLogs();
+            addChatMsg('bude', 'Old logs purged.');
             break;
             
         case 'clear':
@@ -292,122 +239,9 @@ async function loadQueue() {
 
 async function saveQueue(queue) {
     localStorage.setItem('bude_queue', JSON.stringify(queue));
-    try {
-        await fetch('http://localhost:5000/queue', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(queue)
-        });
-    } catch (e) {}
 }
 
-// ─── SYSTEM STATUS ───
-async function loadStatus() {
-    const grid = document.getElementById('status-grid');
-    const status = document.getElementById('system-status');
-    
-    try {
-        const mem = await fetchJson('system/memory.json');
-        const cycles = mem?.evolution_cycles || 0;
-        const last = mem?.last_cycle ? timeAgo(mem.last_cycle) : 'Never';
-        const model = mem?.last_model_used || 'None';
-        const errors = mem?.errors?.length || 0;
-        const queue = (await loadQueue()).length;
-        const phase = mem?.phase || 'build';
-        const modules = mem?.modules_built?.length || 0;
-        const business = mem?.business_modules?.length || 0;
-        
-        grid.innerHTML = `
-            <div class="status-card">
-                <h3>Phase</h3>
-                <div class="value" style="color:${phase==='business'?'#ffaa00':'#00ff88'}">${phase.toUpperCase()}</div>
-            </div>
-            <div class="status-card">
-                <h3>Evolution Cycles</h3>
-                <div class="value">${cycles}</div>
-            </div>
-            <div class="status-card">
-                <h3>Modules Built</h3>
-                <div class="value">${modules}</div>
-            </div>
-            <div class="status-card">
-                <h3>Business Tools</h3>
-                <div class="value" style="color:${business>0?'#ffaa00':'#888'}">${business}</div>
-            </div>
-            <div class="status-card">
-                <h3>Queue</h3>
-                <div class="value" style="color:${queue>0?'#ffaa00':'#00ff88'}">${queue}</div>
-            </div>
-            <div class="status-card">
-                <h3>Errors</h3>
-                <div class="value" style="color:${errors>0?'#ff4444':'#00ff88'}">${errors}</div>
-            </div>
-        `;
-        
-        status.textContent = 'ONLINE';
-        status.className = 'status online';
-        
-    } catch (e) {
-        grid.innerHTML = '<div class="status-card"><h3>System</h3><div class="value">Booting</div></div>';
-        status.textContent = 'OFFLINE';
-        status.className = 'status offline';
-    }
-}
-
-function timeAgo(iso) {
-    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-    return Math.floor(diff/86400) + 'd ago';
-}
-
-// ─── MEMORY ───
-async function loadMemory() {
-    const display = document.getElementById('memory-display');
-    try {
-        const mem = await fetchJson('system/memory.json');
-        display.textContent = JSON.stringify(mem, null, 2);
-    } catch (e) {
-        display.textContent = 'No memory file found. Run /evolve first.';
-    }
-}
-
-// ─── TASKS ───
-async function loadTasks() {
-    const list = document.getElementById('task-list');
-    try {
-        const mem = await fetchJson('system/memory.json');
-        const memTasks = mem?.tasks || [];
-        const queue = await loadQueue();
-        const queuedTasks = queue.filter(q => q.type === 'task' && q.status === 'pending');
-        
-        const allTasks = [
-            ...memTasks.map(t => ({...t, source: 'memory'})),
-            ...queuedTasks.map(q => ({id: q.id, text: q.data, done: false, source: 'queue'}))
-        ];
-        
-        if (allTasks.length === 0) {
-            list.innerHTML = '<li>No tasks. Use /task or tap AUTO WORK.</li>';
-            return;
-        }
-        
-        list.innerHTML = allTasks.map(t => `
-            <li class="${t.done ? 'done' : ''}">
-                <span>${escapeHtml(t.text)} ${t.source === 'queue' ? '<small>[queued]</small>' : ''}</span>
-                ${!t.done ? `<button class="task-toggle" onclick="completeTask(${t.id})">Done</button>` : ''}
-            </li>
-        `).join('');
-    } catch (e) {
-        list.innerHTML = '<li>Failed to load tasks</li>';
-    }
-}
-
-function completeTask(id) {
-    addChatMsg('bude', `Task ${id} marked complete. Will sync on next /evolve.`);
-}
-
-// ─── EVOLUTION STORY (human-friendly) ───
+// ─── EVOLUTION STORY ───
 async function loadEvolution() {
     const display = document.getElementById('evolution-display');
     display.innerHTML = '<div class="story-entry"><p>Loading evolution story...</p></div>';
@@ -415,12 +249,10 @@ async function loadEvolution() {
     try {
         const mem = await fetchJson('system/memory.json');
         const log = await fetchText('system/evolution.log');
-        
         let story = generateStory(mem, log);
         display.innerHTML = story;
-        
     } catch (e) {
-        display.innerHTML = '<div class="story-entry story-header"><h3>🌱 BudE is just getting started</h3><p>Run /evolve or tap AUTO WORK to begin the journey.</p></div>';
+        display.innerHTML = '<div class="story-entry story-header"><h3>🌱 BudE is just getting started</h3><p>Run /evolve or tap AUTO WORK to begin.</p></div>';
     }
 }
 
@@ -434,23 +266,20 @@ function generateStory(mem, log) {
     const errors = mem?.errors || [];
     const focus = mem?.current_focus || 'general';
     
-    // Header
     html += `<div class="story-entry story-header">
         <h2>🧬 BudE Evolution Story</h2>
-        <p><strong>${cycles} cycles completed</strong> | Phase: <span class="phase-${phase}">${phase.toUpperCase()}</span></p>
+        <p><strong>${cycles} cycles</strong> | Phase: <span class="phase-${phase}">${phase.toUpperCase()}</span></p>
     </div>`;
     
-    // What was built
     if (modules.length > 0) {
         html += `<div class="story-entry">
-            <h3>🔧 Core Modules Built</h3>
+            <h3>🔧 Core Modules</h3>
             <ul class="story-list">
                 ${modules.map(m => `<li>✅ ${m.replace('agents/', '').replace('api/', '').replace('tools/', '').replace('.py', '')}</li>`).join('')}
             </ul>
         </div>`;
     }
     
-    // Business tools
     if (business.length > 0) {
         html += `<div class="story-entry story-business">
             <h3>💰 Business Tools</h3>
@@ -460,17 +289,15 @@ function generateStory(mem, log) {
         </div>`;
     }
     
-    // Self-upgrades
     if (upgrades.length > 0) {
         const latest = upgrades[upgrades.length - 1];
         html += `<div class="story-entry story-upgrade">
             <h3>🔄 Self-Upgrade</h3>
-            <p>Last upgrade: <strong>${latest.files.join(', ')}</strong></p>
+            <p>Last: <strong>${latest.files.join(', ')}</strong></p>
             <p class="story-time">${timeAgo(latest.time)}</p>
         </div>`;
     }
     
-    // Recent activity from log
     if (log) {
         const recentLines = log.split('\n').filter(l => l.includes('Built:') || l.includes('PHASE ADVANCE')).slice(-5);
         if (recentLines.length > 0) {
@@ -479,7 +306,7 @@ function generateStory(mem, log) {
                 <ul class="story-list">
                     ${recentLines.map(l => {
                         const msg = l.replace(/\[.*?\]\s*\[.*?\]\s*/, '');
-                        if (msg.includes('Built:')) return `<li>🔨 Built ${msg.replace('Built: ', '')}</li>`;
+                        if (msg.includes('Built:')) return `<li>🔨 ${msg.replace('Built: ', '')}</li>`;
                         if (msg.includes('PHASE ADVANCE')) return `<li>🚀 ${msg}</li>`;
                         return `<li>• ${msg}</li>`;
                     }).join('')}
@@ -488,7 +315,6 @@ function generateStory(mem, log) {
         }
     }
     
-    // Errors (if any)
     if (errors.length > 0) {
         const latestError = errors[errors.length - 1];
         html += `<div class="story-entry story-error">
@@ -498,17 +324,15 @@ function generateStory(mem, log) {
         </div>`;
     }
     
-    // Current focus
     html += `<div class="story-entry story-focus">
         <h3>🎯 Current Focus</h3>
-        <p>${focus === 'business' ? 'Building money-making tools and revenue streams.' : 
+        <p>${focus === 'business' ? 'Building money-making tools.' : 
             focus === 'agents' ? 'Creating AI agent modules.' :
             focus === 'crypto' ? 'Developing crypto analysis tools.' :
             focus === 'build' ? 'Building core system modules.' :
-            'General evolution — improving everything.'}</p>
+            'General evolution.'}</p>
     </div>`;
     
-    // Progress bars
     const moduleGoal = 6;
     const bizGoal = 6;
     const moduleProgress = Math.min((modules.length / moduleGoal) * 100, 100);
@@ -531,29 +355,23 @@ function generateStory(mem, log) {
     return html;
 }
 
-// ─── PURGE OLD LOGS ───
+function timeAgo(iso) {
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+}
+
 async function purgeOldLogs() {
     try {
-        // Keep only last 20 lines of evolution.log
         const log = await fetchText('system/evolution.log');
         const lines = log.split('\n');
         const keepLines = lines.slice(-20);
-        const cleaned = keepLines.join('\n');
-        
-        // We can't write files directly, but we can store in localStorage
-        localStorage.setItem('bude_log_cleaned', cleaned);
-        
-        // Also clear old errors from memory
-        const mem = await fetchJson('system/memory.json');
-        if (mem.errors && mem.errors.length > 3) {
-            mem.errors = mem.errors.slice(-3);
-            // Note: can't save back without backend, but display will be cleaner
-        }
-        
+        localStorage.setItem('bude_log_cleaned', keepLines.join('\n'));
         addChatMsg('bude', `Purged old logs. Kept last ${keepLines.length} entries.`);
-        
     } catch (e) {
-        addChatMsg('bude', 'Could not purge logs. No log file found.');
+        addChatMsg('bude', 'No log file found.');
     }
 }
 
@@ -572,7 +390,6 @@ async function fetchText(path) {
 
 // ─── INIT ───
 document.addEventListener('DOMContentLoaded', () => {
-    loadStatus();
     addChatMsg('bude', `BudE OS v0.3 online. Repo: ${GITHUB_FULL}.`);
-    addChatMsg('bude', 'Tap AUTO WORK to evolve, or type /help. Check the Evolution Log for the story!');
+    addChatMsg('bude', 'Tap AUTO WORK to evolve, or type /help.');
 });
