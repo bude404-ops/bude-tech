@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-BudE Evolution Engine v0.3
+BudE Evolution Engine v0.4
 Repo: https://github.com/bude404-ops/Bude-Tech
 Phased evolution: BUILD → BUSINESS
-Dashboard LOCKED | Auto-log-cleanup enabled
+Dashboard LOCKED | Auto-log-cleanup enabled | Simple chat interface
 """
 
 import os
@@ -16,6 +16,8 @@ REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 MEMORY_PATH = os.path.join(REPO_ROOT, "system", "memory.json")
 LOG_PATH = os.path.join(REPO_ROOT, "system", "evolution.log")
 QUEUE_PATH = os.path.join(REPO_ROOT, "system", "queue.json")
+CHAT_PATH = os.path.join(REPO_ROOT, "system", "chat.txt")
+CHAT_LOG_PATH = os.path.join(REPO_ROOT, "system", "chat.log")
 GITHUB_REPO = "bude404-ops/Bude-Tech"
 
 GROQ_MODELS = [
@@ -41,6 +43,32 @@ EXISTING_PATTERNS = [
     "copy_of_",
     "backup_",
 ]
+
+# --- SIMPLE CHAT SYSTEM ---
+
+def read_chat():
+    """Read raw chat messages from plain text file."""
+    if not os.path.exists(CHAT_PATH):
+        return ""
+    with open(CHAT_PATH, "r", encoding="utf-8") as f:
+        content = f.read().strip()
+    return content
+
+def clear_chat():
+    """Clear chat file after processing."""
+    if os.path.exists(CHAT_PATH):
+        with open(CHAT_PATH, "w", encoding="utf-8") as f:
+            f.write("")
+
+def log_chat_response(user_msg, bot_response):
+    """Log chat conversation for history."""
+    ts = datetime.utcnow().isoformat()
+    entry = f"\n[{ts}] USER: {user_msg}\n[{ts}] BUDE: {bot_response}\n"
+    os.makedirs(os.path.dirname(CHAT_LOG_PATH), exist_ok=True)
+    with open(CHAT_LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(entry)
+
+# --- SELF-HEAL ---
 
 def self_heal():
     """Read last error and attempt to fix it."""
@@ -73,11 +101,13 @@ def self_heal():
     except Exception as e:
         log_event(f"SELF-HEAL failed: {e}", "WARN")
 
+# --- LOGGING ---
+
 def log_event(msg, level="INFO"):
     ts = datetime.utcnow().isoformat()
     entry = f"[{ts}] [{level}] {msg}\n"
     os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
-    with open(LOG_PATH, "a") as f:
+    with open(LOG_PATH, "a", encoding="utf-8") as f:
         f.write(entry)
     print(entry.strip())
 
@@ -85,18 +115,20 @@ def cleanup_logs():
     if not os.path.exists(LOG_PATH):
         return
     try:
-        with open(LOG_PATH, "r") as f:
+        with open(LOG_PATH, "r", encoding="utf-8") as f:
             lines = f.readlines()
         if len(lines) > MAX_LOG_LINES:
-            with open(LOG_PATH, "w") as f:
+            with open(LOG_PATH, "w", encoding="utf-8") as f:
                 f.writelines(lines[-MAX_LOG_LINES:])
             print(f"[CLEANUP] Trimmed evolution.log to {MAX_LOG_LINES} lines")
     except Exception as e:
         print(f"[CLEANUP] Error: {e}")
 
+# --- MEMORY ---
+
 def load_memory():
     if os.path.exists(MEMORY_PATH):
-        with open(MEMORY_PATH, "r") as f:
+        with open(MEMORY_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     return {
         "evolution_cycles": 0,
@@ -113,23 +145,27 @@ def load_memory():
 
 def save_memory(mem):
     os.makedirs(os.path.dirname(MEMORY_PATH), exist_ok=True)
-    with open(MEMORY_PATH, "w") as f:
+    with open(MEMORY_PATH, "w", encoding="utf-8") as f:
         json.dump(mem, f, indent=2)
+
+# --- QUEUE ---
 
 def process_queue():
     if not os.path.exists(QUEUE_PATH):
         return []
-    with open(QUEUE_PATH, "r") as f:
+    with open(QUEUE_PATH, "r", encoding="utf-8") as f:
         queue = json.load(f)
     pending = [q for q in queue if q.get("status") == "pending"]
     for q in queue:
         q["status"] = "processed"
         q["processed_at"] = datetime.utcnow().isoformat()
-    with open(QUEUE_PATH, "w") as f:
+    with open(QUEUE_PATH, "w", encoding="utf-8") as f:
         json.dump(queue, f, indent=2)
     if pending:
         log_event(f"Processed {len(pending)} queued commands")
     return pending
+
+# --- REPO STATE ---
 
 def get_repo_state():
     files = []
@@ -140,6 +176,8 @@ def get_repo_state():
             path = os.path.relpath(os.path.join(root, f), REPO_ROOT)
             files.append(path)
     return files
+
+# --- PHASE LOGIC ---
 
 def determine_phase(memory, files):
     core_modules = [
@@ -210,6 +248,8 @@ RULES:
 - Never execute real transactions
 """
 
+# --- PROMPT BUILDER ---
+
 def build_prompt(brain, repo_state, memory, queued):
     brain_summary = brain[:1500] + "\n... [truncated]" if len(brain) > 1500 else brain
     file_list = repo_state[:40]
@@ -218,6 +258,7 @@ def build_prompt(brain, repo_state, memory, queued):
     phase = memory.get("phase", "build")
     forced_focus = memory.get("current_focus", "general")
     
+    # Process queued commands
     for q in queued:
         if q.get("type") == "focus":
             forced_focus = q.get("data", "general")
@@ -247,6 +288,20 @@ def build_prompt(brain, repo_state, memory, queued):
         "business": len(memory.get("business_modules", []))
     }
     
+    # Read simple chat
+    chat_text = read_chat()
+    chat_section = ""
+    if chat_text:
+        chat_section = f"""
+
+HUMAN SAID:
+\"\"\"{chat_text}\"\"\"
+
+You are talking directly to a human. Understand their intent like a smart assistant would.
+If they want you to build something, build it. If they want info, tell them. If they want a fix, fix it.
+Always reply in the "chat_response" field. Build files when needed.
+"""
+    
     prompt = f"""You are BudE evolution engine.
 Repo: {GITHUB_REPO}
 
@@ -260,6 +315,7 @@ MEMORY:
 {json.dumps(mem_summary)}
 
 {phase_prompt}
+{chat_section}
 
 STRICT RULES:
 - DASHBOARD LOCKED: Never modify {', '.join(PROTECTED_FILES)}
@@ -267,14 +323,15 @@ STRICT RULES:
 - Fix bugs, add features, improve everything else
 - Output ONLY valid JSON
 
-JSON:
+JSON FORMAT:
 {{
   "actions": [
     {{"type": "create_file", "path": "filename", "content": "content"}}
   ],
   "reasoning": "why",
   "upgrades_made": ["files"],
-  "new_tasks": ["task1"]
+  "new_tasks": ["task1"],
+  "chat_response": "Your reply to the user here (only if human spoke)"
 }}
 
 Keep compact. 1-2 files per cycle.
@@ -284,6 +341,8 @@ Keep compact. 1-2 files per cycle.
         prompt = prompt[:MAX_PROMPT_CHARS] + "\n... [truncated]\n}"
     
     return prompt
+
+# --- GROQ API ---
 
 def is_duplicate(path):
     base = os.path.basename(path)
@@ -328,6 +387,8 @@ def try_models(prompt):
             continue
     raise RuntimeError("All models failed")
 
+# --- APPLY CHANGES ---
+
 def apply_changes(result, memory):
     upgrades = result.get("upgrades_made", [])
     created = []
@@ -351,7 +412,7 @@ def apply_changes(result, memory):
             continue
         
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(action["content"])
         created.append(path)
         log_event(f"Built: {path}")
@@ -375,8 +436,10 @@ def clean_json_response(raw):
         cleaned = cleaned[:-3]
     return cleaned.strip()
 
+# --- MAIN ---
+
 def main():
-    global MAX_PROMPT_CHARS  # FIXED: moved to top of function
+    global MAX_PROMPT_CHARS
     
     cleanup_logs()
     heal_action = self_heal()
@@ -398,8 +461,13 @@ def main():
         log_event("brain.md missing", "ERROR")
         sys.exit(1)
     
-    with open(brain_path, "r") as f:
+    with open(brain_path, "r", encoding="utf-8") as f:
         brain = f.read()
+    
+    # Read chat before processing
+    chat_text = read_chat()
+    if chat_text:
+        log_event(f"Chat received: {chat_text[:80]}...")
     
     queued = process_queue()
     repo_state = get_repo_state()
@@ -420,7 +488,19 @@ def main():
         
         created, upgrades = apply_changes(result, memory)
         
-        if len(created) == 0:
+        # Handle chat response
+        chat_response = result.get("chat_response", "")
+        if chat_response and chat_text:
+            log_chat_response(chat_text, chat_response)
+            log_event(f"Chat reply: {chat_response[:100]}...")
+        
+        # Clear chat after processing
+        if chat_text:
+            clear_chat()
+            log_event("Chat cleared")
+        
+        # Skip if nothing built and no chat
+        if len(created) == 0 and not chat_response:
             log_event("No files created. Skipping commit.")
             memory["evolution_cycles"] = memory.get("evolution_cycles", 0) + 1
             memory["last_cycle"] = datetime.utcnow().isoformat()
