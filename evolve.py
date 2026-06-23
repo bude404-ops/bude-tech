@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-BudE Evolution Engine v0.2
+BudE Evolution Engine v0.3
 Repo: https://github.com/bude404-ops/Bude-Tech
-Dashboard LOCKED — AI cannot modify UI files
+Phased evolution: BUILD → BUSINESS
+Dashboard LOCKED
 """
 
 import os
@@ -27,11 +28,19 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 MAX_PROMPT_CHARS = 12000
 
-# DASHBOARD IS LOCKED
+# LOCKED — never modify
 PROTECTED_FILES = [
     "dashboard.js",
     "style.css",
     "index.html",
+]
+
+# Prevent duplicate creation
+EXISTING_PATTERNS = [
+    "new_",
+    "_requirements.txt",
+    "copy_of_",
+    "backup_",
 ]
 
 def log_event(msg, level="INFO"):
@@ -53,7 +62,10 @@ def load_memory():
         "tasks": [],
         "repo": GITHUB_REPO,
         "upgrades_made": [],
-        "current_focus": "general"
+        "current_focus": "build",
+        "phase": "build",  # build → business → monetize
+        "modules_built": [],
+        "business_modules": []
     }
 
 def save_memory(mem):
@@ -86,74 +98,168 @@ def get_repo_state():
             files.append(path)
     return files
 
+def determine_phase(memory, files):
+    """Auto-detect phase based on what exists."""
+    core_modules = [
+        "agents/coder_agent.py",
+        "agents/researcher_agent.py",
+        "agents/crypto_analyst_agent.py",
+        "agents/system_architect_agent.py",
+        "api/solana.py",
+        "tools/utils.py",
+    ]
+    
+    built = [m for m in core_modules if m in files]
+    memory["modules_built"] = built
+    
+    if len(built) >= 4:
+        return "business"
+    return "build"
+
+def build_phase_prompt(memory, files):
+    """Prompt for BUILD phase — create core modules."""
+    missing = [
+        "agents/coder_agent.py — writes and fixes code",
+        "agents/researcher_agent.py — gathers information from APIs",
+        "agents/crypto_analyst_agent.py — analyzes Solana/crypto data",
+        "agents/system_architect_agent.py — plans system structure",
+        "api/solana.py — Solana blockchain reader (public data only)",
+        "tools/utils.py — shared helper functions",
+        "tests/test_agents.py — verify agents work",
+    ]
+    
+    # Filter out already built
+    built_names = [os.path.basename(f) for f in memory.get("modules_built", [])]
+    missing = [m for m in missing if not any(b in m for b in built_names)]
+    
+    return f"""
+PHASE: BUILD (Core System)
+Progress: {len(memory.get('modules_built', []))}/6 core modules
+
+MISSING MODULES — build ONE per cycle:
+{chr(10).join(missing[:3])}
+
+RULES:
+- Create ONE file per cycle
+- NO duplicates (no "new_" prefixes, no "_requirements.txt")
+- NO requirements files (use standard library + requests)
+- Make it functional, not perfect
+- Test that it runs
+"""
+
+def business_phase_prompt(memory, files):
+    """Prompt for BUSINESS phase — money-making features."""
+    opportunities = [
+        "api/freelance.py — scan freelance platforms for AI coding gigs",
+        "api/crypto_signals.py — generate trading signals (simulation only)",
+        "tools/content_generator.py — generate blog/social content",
+        "api/affiliate.py — track affiliate link performance",
+        "tools/saas_builder.py — build micro-SaaS tools",
+        "api/price_tracker.py — track API pricing, find cheapest options",
+    ]
+    
+    built_biz = memory.get("business_modules", [])
+    missing = [o for o in opportunities if not any(b in o for b in built_biz)]
+    
+    return f"""
+PHASE: BUSINESS (Money Making)
+Core modules: ✅ DONE
+Business modules: {len(built_biz)}/6
+
+OPPORTUNITIES — build ONE per cycle:
+{chr(10).join(missing[:3])}
+
+RULES:
+- Create ONE revenue-oriented tool per cycle
+- NO duplicates
+- Use free APIs only
+- Track potential earnings in code comments
+- Never execute real transactions
+"""
+
 def build_prompt(brain, repo_state, memory, queued):
-    brain_summary = brain[:2000] + "\n... [truncated]" if len(brain) > 2000 else brain
-    file_list = repo_state[:50]
+    brain_summary = brain[:1500] + "\n... [truncated]" if len(brain) > 1500 else brain
+    file_list = repo_state[:40]
     file_count = len(repo_state)
+    
+    # Auto-detect or use forced focus
+    phase = memory.get("phase", "build")
+    forced_focus = memory.get("current_focus", "general")
+    
+    for q in queued:
+        if q.get("type") == "focus":
+            forced_focus = q.get("data", "general")
+            if forced_focus == "business":
+                phase = "business"
+            memory["current_focus"] = forced_focus
+            memory["phase"] = phase
+            save_memory(memory)
+    
+    # Auto-advance phase if build is complete
+    if phase == "build" and forced_focus not in ["business", "money"]:
+        detected = determine_phase(memory, repo_state)
+        if detected == "business":
+            phase = "business"
+            memory["phase"] = "business"
+            log_event("PHASE ADVANCE: Build complete → Business mode")
+    
+    # Select phase prompt
+    if phase == "business" or forced_focus in ["business", "money", "monetize"]:
+        phase_prompt = business_phase_prompt(memory, repo_state)
+    else:
+        phase_prompt = build_phase_prompt(memory, repo_state)
     
     mem_summary = {
         "cycles": memory.get("evolution_cycles", 0),
-        "last": memory.get("last_cycle", "never"),
-        "tasks": len(memory.get("tasks", [])),
-        "errors": len(memory.get("errors", []))
+        "phase": phase,
+        "focus": forced_focus,
+        "modules": len(memory.get("modules_built", [])),
+        "business": len(memory.get("business_modules", []))
     }
-    
-    focus = memory.get("current_focus", "general")
-    for q in queued:
-        if q.get("type") == "focus":
-            focus = q.get("data", "general")
-            memory["current_focus"] = focus
-            save_memory(memory)
-    
-    focus_instruction = ""
-    if focus == "agents":
-        focus_instruction = "\nPRIORITY FOCUS: Build agent modules. Create coder, researcher, architect, crypto agents in agents/ directory."
-    elif focus == "crypto":
-        focus_instruction = "\nPRIORITY FOCUS: Build crypto analysis tools. Solana integration, wallet tracking, market data."
-    elif focus == "self":
-        focus_instruction = "\nPRIORITY FOCUS: Self-upgrade. Improve evolve.py, brain.md, workflow efficiency."
-    elif focus == "bugs":
-        focus_instruction = "\nPRIORITY FOCUS: Fix bugs. Check evolution.log for errors and fix root causes."
-    
-    queue_summary = ""
-    if queued:
-        queue_summary = f"\nQueued: {len(queued)} commands"
     
     prompt = f"""You are BudE evolution engine.
 Repo: {GITHUB_REPO}
 
-BRAIN (summary):
+BRAIN:
 {brain_summary}
 
-FILES ({file_count} total, showing {len(file_list)}):
+FILES ({file_count} total):
 {json.dumps(file_list, indent=2)}
 
 MEMORY:
-{json.dumps(mem_summary)}{queue_summary}{focus_instruction}
+{json.dumps(mem_summary)}
+
+{phase_prompt}
 
 STRICT RULES:
-- DASHBOARD IS LOCKED: Never modify {', '.join(PROTECTED_FILES)}
-- You can upgrade: evolve.py, brain.md, agents/*, api/*, tools/*, system/*
-- Fix bugs, add features, improve everything else
+- DASHBOARD LOCKED: Never modify {', '.join(PROTECTED_FILES)}
+- NO duplicate files (no "new_", no "_requirements.txt")
+- ONE file per cycle, make it work
 - Output ONLY valid JSON
 
-JSON structure:
+JSON:
 {{
   "actions": [
-    {{"type": "create_file", "path": "filename", "content": "complete file content"}}
+    {{"type": "create_file", "path": "filename", "content": "complete content"}}
   ],
-  "reasoning": "why",
-  "upgrades_made": ["list of files you upgraded"],
-  "new_tasks": ["task1"]
+  "reasoning": "why this file",
+  "upgrades_made": ["files"],
+  "new_tasks": ["next steps"]
 }}
-
-Keep compact. 1-2 files per cycle.
 """
     
     if len(prompt) > MAX_PROMPT_CHARS:
         prompt = prompt[:MAX_PROMPT_CHARS] + "\n... [truncated]\n}"
     
     return prompt
+
+def is_duplicate(path):
+    """Check if file matches duplicate patterns."""
+    base = os.path.basename(path)
+    for pattern in EXISTING_PATTERNS:
+        if pattern in base:
+            return True
+    return False
 
 def call_groq(prompt, model):
     headers = {
@@ -163,10 +269,10 @@ def call_groq(prompt, model):
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are BudE. Dashboard is locked. Output only valid JSON. Be concise."},
+            {"role": "system", "content": "You are BudE. Build focused, no duplicates. Output only JSON."},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.4,
+        "temperature": 0.3,
         "max_tokens": 2048
     }
     resp = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=60)
@@ -175,7 +281,7 @@ def call_groq(prompt, model):
     if "error" in data:
         raise RuntimeError(f"Groq error: {data['error']}")
     if "choices" not in data or not data["choices"]:
-        raise RuntimeError("No choices in response")
+        raise RuntimeError("No choices")
     return data["choices"][0]["message"]["content"]
 
 def try_models(prompt):
@@ -186,27 +292,49 @@ def try_models(prompt):
             log_event(f"Success: {model}")
             return result, model
         except Exception as e:
-            err_msg = str(e)[:100]
-            log_event(f"{model} failed: {err_msg}", "WARN")
+            log_event(f"{model} failed: {str(e)[:80]}", "WARN")
             continue
     raise RuntimeError("All models failed")
 
-def apply_changes(result):
+def apply_changes(result, memory):
     upgrades = result.get("upgrades_made", [])
     created = []
+    
     for action in result.get("actions", []):
-        if action["type"] == "create_file":
-            path = action["path"]
-            
-            if path in PROTECTED_FILES:
-                log_event(f"BLOCKED dashboard file: {path}")
-                continue
-            
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w") as f:
-                f.write(action["content"])
-            created.append(path)
-            log_event(f"Upgraded: {path}")
+        if action["type"] != "create_file":
+            continue
+        
+        path = action["path"]
+        
+        # Block protected
+        if path in PROTECTED_FILES:
+            log_event(f"BLOCKED dashboard: {path}")
+            continue
+        
+        # Block duplicates
+        if is_duplicate(path):
+            log_event(f"BLOCKED duplicate: {path}")
+            continue
+        
+        # Block requirements files
+        if path.endswith("_requirements.txt"):
+            log_event(f"BLOCKED requirements: {path}")
+            continue
+        
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(action["content"])
+        created.append(path)
+        log_event(f"Built: {path}")
+        
+        # Track in memory
+        if "business" in path or "freelance" in path or "saas" in path:
+            memory["business_modules"] = memory.get("business_modules", [])
+            memory["business_modules"].append(path)
+        elif "agents/" in path or "api/" in path or "tools/" in path:
+            memory["modules_built"] = memory.get("modules_built", [])
+            memory["modules_built"].append(path)
+    
     return created, upgrades
 
 def clean_json_response(raw):
@@ -220,10 +348,11 @@ def clean_json_response(raw):
     return cleaned.strip()
 
 def main():
-    log_event(f"=== BudE Evolution | {GITHUB_REPO} | DASHBOARD LOCKED ===")
+    memory = load_memory()
+    log_event(f"=== BudE | Phase: {memory.get('phase', 'build')} | Focus: {memory.get('current_focus', 'general')} ===")
     
     if not GROQ_API_KEY:
-        log_event("No GROQ_API_KEY. Aborting.", "ERROR")
+        log_event("No GROQ_API_KEY", "ERROR")
         sys.exit(1)
     
     brain_path = os.path.join(REPO_ROOT, "brain.md")
@@ -234,7 +363,6 @@ def main():
     with open(brain_path, "r") as f:
         brain = f.read()
     
-    memory = load_memory()
     queued = process_queue()
     repo_state = get_repo_state()
     prompt = build_prompt(brain, repo_state, memory, queued)
@@ -248,12 +376,13 @@ def main():
         try:
             result = json.loads(cleaned)
         except json.JSONDecodeError as e:
-            log_event(f"JSON parse error: {e}", "ERROR")
+            log_event(f"JSON error: {e}", "ERROR")
             log_event(f"Raw: {raw_response[:300]}", "DEBUG")
             raise
         
-        created, upgrades = apply_changes(result)
+        created, upgrades = apply_changes(result, memory)
         
+        # Update memory
         new_tasks = result.get("new_tasks", [])
         completed_tasks = result.get("tasks_completed", [])
         current_tasks = memory.get("tasks", [])
@@ -273,15 +402,14 @@ def main():
                 "time": datetime.utcnow().isoformat(),
                 "files": upgrades
             })
-            log_event(f"SELF-UPGRADED: {', '.join(upgrades)}")
         
         memory["errors"] = []
         save_memory(memory)
         
-        log_event(f"=== Complete | Upgraded: {len(created)} | Dashboard locked ===")
+        log_event(f"=== Done | Built: {len(created)} | Phase: {memory.get('phase', 'build')} ===")
         
     except Exception as e:
-        log_event(f"Evolution failed: {e}", "ERROR")
+        log_event(f"Failed: {e}", "ERROR")
         memory["errors"] = memory.get("errors", [])
         memory["errors"].append({"time": datetime.utcnow().isoformat(), "error": str(e)[:200]})
         save_memory(memory)
