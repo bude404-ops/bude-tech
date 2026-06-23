@@ -13,6 +13,15 @@
             <div class="status" id="system-status">Checking...</div>
         </header>
 
+        <div class="auto-work-bar">
+            <button id="auto-work-btn" class="auto-work-btn" onclick="toggleAutoWork()">
+                AUTO WORK: OFF
+            </button>
+            <div class="auto-work-status" id="auto-work-status">
+                Tap to start autonomous evolution
+            </div>
+        </div>
+
         <nav class="tabs">
             <button class="tab-btn active" onclick="switchTab('chat')">Chat</button>
             <button class="tab-btn" onclick="switchTab('status')">System Status</button>
