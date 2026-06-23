@@ -1,4 +1,6 @@
 import pandas as pd
-# Generate trading signals
-# Track potential earnings: $1000
-# Use free API: Alpha Vantage
+# Generate trading signals using historical data
+# Track potential earnings in code comments
+# Use free APIs only
+# Output valid JSON
+# ...
