@@ -1,4 +1,8 @@
+# Generate trading signals based on crypto market trends
+# Potential earnings: $1000/month
 import pandas as pd
-# Generate trading signals
-# Track potential earnings: $1000
-# Use free API: Alpha Vantage
+import yfinance as yf
+
+def generate_signals():
+    # TO DO: implement signal generation logic
+    pass
