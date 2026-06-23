@@ -1,9 +1,3 @@
-[2026-06-23T20:31:13.934442] [INFO] Trying: llama-3.1-8b-instant
-[2026-06-23T20:31:14.310597] [INFO] Success: llama-3.1-8b-instant
-[2026-06-23T20:31:14.311067] [INFO] Built: tools/content_generator.py
-[2026-06-23T20:31:14.311191] [INFO] Built: api/affiliate.py
-[2026-06-23T20:31:14.312208] [INFO] === Done | Built: 2 | Phase: business ===
-[2026-06-23T20:31:35.020657] [INFO] === BudE | Phase: business | Focus: general ===
 [2026-06-23T20:31:35.021939] [INFO] Prompt: 3798 chars
 [2026-06-23T20:31:35.021999] [INFO] Trying: llama-3.3-70b-versatile
 [2026-06-23T20:31:35.101176] [WARN] llama-3.3-70b-versatile failed: 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
@@ -54,3 +48,11 @@
 [2026-06-23T21:08:11.714596] [INFO] Success: llama-3.3-70b-versatile
 [2026-06-23T21:08:11.715044] [INFO] Built: tools/content_generator.py
 [2026-06-23T21:08:11.716155] [INFO] === Done | Built: 1 | Phase: business ===
+[2026-06-23T21:08:29.428401] [INFO] === BudE | Phase: business | Focus: general ===
+[2026-06-23T21:08:29.429640] [INFO] Prompt: 3832 chars
+[2026-06-23T21:08:29.429693] [INFO] Trying: llama-3.3-70b-versatile
+[2026-06-23T21:08:29.621997] [WARN] llama-3.3-70b-versatile failed: 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
+[2026-06-23T21:08:29.622983] [INFO] Trying: llama-3.1-8b-instant
+[2026-06-23T21:08:30.294981] [INFO] Success: llama-3.1-8b-instant
+[2026-06-23T21:08:30.295462] [INFO] Built: tools/content_generator.py
+[2026-06-23T21:08:30.296598] [INFO] === Done | Built: 1 | Phase: business ===
