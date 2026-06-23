@@ -1,9 +1,9 @@
-name: BudE Evolution Engine v0.3
+name: BudE Evolution Engine v0.5-SOL
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 */2 * * *"
 
 permissions:
   contents: write
@@ -37,12 +37,12 @@ jobs:
           git config user.name "bude-ai"
           git config user.email "bude@ai.system"
           git add .
-          
+
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
           fi
-          
+
           git commit -m "BudE evolution cycle update"
           git pull --rebase origin main || git pull origin main
           git push origin main || (sleep 5 && git pull --rebase origin main && git push origin main)
