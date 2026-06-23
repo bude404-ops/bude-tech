@@ -1,3 +1,2 @@
-import random
-# Generate blog/social content
-# Use free APIs only
+# Generate blog/social content using free APIs
+# Potential earnings: $100/month
