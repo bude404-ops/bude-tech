@@ -1,15 +1,3 @@
-[2026-06-23T21:51:35.828346] [INFO] Trying: llama-3.1-8b-instant
-[2026-06-23T21:51:36.825174] [INFO] Success: llama-3.1-8b-instant
-[2026-06-23T21:51:36.825609] [INFO] Built: api/email_sender.py
-[2026-06-23T21:51:36.825764] [INFO] Built: landing_page/index.html
-[2026-06-23T21:51:36.826212] [INFO] === Done | Built: 2 | Phase: business | Revenue: 0.0000 SOL ===
-[2026-06-23T21:52:05.087864] [INFO] === BudE | Phase: business | Focus: money ===
-[2026-06-23T21:52:05.089219] [INFO] Prompt: 4499 chars
-[2026-06-23T21:52:05.089277] [INFO] Trying: llama-3.3-70b-versatile
-[2026-06-23T21:52:05.166964] [WARN] llama-3.3-70b-versatile failed: 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
-[2026-06-23T21:52:05.167535] [INFO] Trying: llama-3.1-8b-instant
-[2026-06-23T21:52:06.092968] [INFO] Success: llama-3.1-8b-instant
-[2026-06-23T21:52:06.093389] [INFO] Built: api/email_sender.py
 [2026-06-23T21:52:06.093537] [INFO] Built: landing_page/index.html
 [2026-06-23T21:52:06.093931] [INFO] === Done | Built: 2 | Phase: business | Revenue: 0.0000 SOL ===
 [2026-06-23T21:52:44.334983] [INFO] === BudE | Phase: business | Focus: money ===
@@ -60,3 +48,15 @@
 [2026-06-23T22:01:33.161232] [INFO] UPDATING: api/email_sender.py
 [2026-06-23T22:01:33.161396] [INFO] Built: api/email_sender.py
 [2026-06-23T22:01:33.161744] [INFO] === Done | Built: 2 | Phase: business | Revenue: 0.0000 SOL ===
+[2026-06-23T22:02:34.616225] [INFO] === BudE | Phase: business | Focus: money ===
+[2026-06-23T22:02:34.617685] [INFO] Prompt: 5041 chars
+[2026-06-23T22:02:34.617739] [INFO] Trying: llama-3.3-70b-versatile
+[2026-06-23T22:02:34.766772] [WARN] llama-3.3-70b-versatile failed: 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
+[2026-06-23T22:02:34.766888] [WARN] Rate limited, waiting 30s before next model...
+[2026-06-23T22:03:04.767930] [INFO] Trying: llama-3.1-8b-instant
+[2026-06-23T22:03:05.600160] [INFO] Success: llama-3.1-8b-instant
+[2026-06-23T22:03:05.600534] [INFO] UPDATING: api/email_sender.py
+[2026-06-23T22:03:05.600691] [INFO] Built: api/email_sender.py
+[2026-06-23T22:03:05.600772] [INFO] UPDATING: landing_page/index.html
+[2026-06-23T22:03:05.600902] [INFO] Built: landing_page/index.html
+[2026-06-23T22:03:05.601240] [INFO] === Done | Built: 2 | Phase: business | Revenue: 0.0000 SOL ===
