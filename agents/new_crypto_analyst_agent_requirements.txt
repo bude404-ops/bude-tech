@@ -1,1 +1,8 @@
-requirements for new crypto analyst agent
+# Requirements for new crypto analyst agent
+
+# Install required packages
+pip install requests pandas
+
+# Import required libraries
+import requests
+import pandas as pd
