@@ -1,2 +1,2 @@
 import os
-print('Developer objectives loaded')
+# developer objectives
