@@ -45,4 +45,4 @@ jobs:
 
           git commit -m "BudE evolution cycle update"
           git pull --rebase origin main || git pull origin main
-          git push origin main || (sleep 5 && git pull --rebase origin main && git push origin main)
+          git push origin main || (sleep 5 && git pull --rebase origin main && git push main)
