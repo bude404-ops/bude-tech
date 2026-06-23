@@ -136,8 +136,8 @@ function handleCommand(cmd) {
 /tasks — view task list
 /agent <type> — request agent module
 /crypto <wallet> — analyze Solana wallet
-/log — show evolution log
-/focus <area> — set priority: agents, crypto, self, bugs
+/log — show evolution story
+/focus <area> — set priority: agents, crypto, self, bugs, business
 /token <key> — store GitHub token
 /repo — open GitHub repo
 /clear — clear chat`);
@@ -200,18 +200,18 @@ function handleCommand(cmd) {
         case 'log':
             loadEvolution();
             switchTab('evolution');
-            addChatMsg('bude', 'Evolution log loaded.');
+            addChatMsg('bude', 'Evolution story loaded.');
             break;
             
         case 'focus':
             if (!args) {
                 addChatMsg('bude', `Usage: /focus <area>
-Areas: agents, crypto, self, bugs
-Example: /focus agents`);
+Areas: agents, crypto, self, bugs, business
+Example: /focus business`);
                 return;
             }
             if (args === 'dashboard') {
-                addChatMsg('bude', 'Dashboard is locked. Use /focus agents, crypto, self, or bugs.');
+                addChatMsg('bude', 'Dashboard is locked. Use /focus agents, crypto, self, bugs, or business.');
                 return;
             }
             queueCommand('focus', args);
@@ -307,19 +307,26 @@ async function loadStatus() {
         const model = mem?.last_model_used || 'None';
         const errors = mem?.errors?.length || 0;
         const queue = (await loadQueue()).length;
+        const phase = mem?.phase || 'build';
+        const modules = mem?.modules_built?.length || 0;
+        const business = mem?.business_modules?.length || 0;
         
         grid.innerHTML = `
+            <div class="status-card">
+                <h3>Phase</h3>
+                <div class="value" style="color:${phase==='business'?'#ffaa00':'#00ff88'}">${phase.toUpperCase()}</div>
+            </div>
             <div class="status-card">
                 <h3>Evolution Cycles</h3>
                 <div class="value">${cycles}</div>
             </div>
             <div class="status-card">
-                <h3>Last Cycle</h3>
-                <div class="value" style="font-size:0.85rem">${last}</div>
+                <h3>Modules Built</h3>
+                <div class="value">${modules}</div>
             </div>
             <div class="status-card">
-                <h3>Active Model</h3>
-                <div class="value" style="font-size:0.85rem">${model}</div>
+                <h3>Business Tools</h3>
+                <div class="value" style="color:${business>0?'#ffaa00':'#888'}">${business}</div>
             </div>
             <div class="status-card">
                 <h3>Queue</h3>
@@ -394,16 +401,126 @@ function completeTask(id) {
     addChatMsg('bude', `Task ${id} marked complete. Will sync on next /evolve.`);
 }
 
-// ─── EVOLUTION LOG ───
+// ─── EVOLUTION STORY (human-friendly) ───
 async function loadEvolution() {
     const display = document.getElementById('evolution-display');
     try {
+        const mem = await fetchJson('system/memory.json');
         const log = await fetchText('system/evolution.log');
-        const lines = log.split('\n').slice(-50).join('\n');
-        display.textContent = lines || 'Log is empty.';
+        
+        let story = generateStory(mem, log);
+        display.innerHTML = story;
+        
     } catch (e) {
-        display.textContent = 'No evolution log. Run /evolve or tap AUTO WORK.';
+        display.innerHTML = '<div class="story-entry"><h3>🌱 BudE is just getting started</h3><p>Run /evolve or tap AUTO WORK to begin the journey.</p></div>';
     }
+}
+
+function generateStory(mem, log) {
+    let html = '';
+    const cycles = mem?.evolution_cycles || 0;
+    const phase = mem?.phase || 'build';
+    const modules = mem?.modules_built || [];
+    const business = mem?.business_modules || [];
+    const upgrades = mem?.upgrades_made || [];
+    const errors = mem?.errors || [];
+    
+    // Header story
+    html += `<div class="story-entry story-header">
+        <h2>🧬 BudE Evolution Story</h2>
+        <p><strong>${cycles} cycles completed</strong> | Phase: <span class="phase-${phase}">${phase.toUpperCase()}</span></p>
+    </div>`;
+    
+    // What was built
+    if (modules.length > 0) {
+        html += `<div class="story-entry">
+            <h3>🔧 Core Modules Built</h3>
+            <ul class="story-list">
+                ${modules.map(m => `<li>✅ ${m.replace('agents/', '').replace('api/', '').replace('tools/', '')}</li>`).join('')}
+            </ul>
+        </div>`;
+    }
+    
+    // Business tools
+    if (business.length > 0) {
+        html += `<div class="story-entry story-business">
+            <h3>💰 Business Tools</h3>
+            <ul class="story-list">
+                ${business.map(b => `<li>💵 ${b.replace('api/', '').replace('tools/', '')}</li>`).join('')}
+            </ul>
+        </div>`;
+    }
+    
+    // Self-upgrades
+    if (upgrades.length > 0) {
+        const latest = upgrades[upgrades.length - 1];
+        html += `<div class="story-entry story-upgrade">
+            <h3>🔄 Self-Upgrade</h3>
+            <p>Last upgrade: <strong>${latest.files.join(', ')}</strong></p>
+            <p class="story-time">${timeAgo(latest.time)}</p>
+        </div>`;
+    }
+    
+    // Recent activity from log
+    if (log) {
+        const recentLines = log.split('\n').filter(l => l.includes('Built:') || l.includes('PHASE ADVANCE')).slice(-5);
+        if (recentLines.length > 0) {
+            html += `<div class="story-entry">
+                <h3>📋 Recent Activity</h3>
+                <ul class="story-list">
+                    ${recentLines.map(l => {
+                        const msg = l.replace(/\[.*?\]\s*\[.*?\]\s*/, '');
+                        if (msg.includes('Built:')) return `<li>🔨 Built ${msg.replace('Built: ', '')}</li>`;
+                        if (msg.includes('PHASE ADVANCE')) return `<li>🚀 ${msg}</li>`;
+                        return `<li>• ${msg}</li>`;
+                    }).join('')}
+                </ul>
+            </div>`;
+        }
+    }
+    
+    // Errors (if any)
+    if (errors.length > 0) {
+        const latestError = errors[errors.length - 1];
+        html += `<div class="story-entry story-error">
+            <h3>⚠️ Latest Issue</h3>
+            <p>${latestError.error}</p>
+            <p class="story-time">${timeAgo(latestError.time)}</p>
+        </div>`;
+    }
+    
+    // Current focus / next steps
+    const focus = mem?.current_focus || 'general';
+    html += `<div class="story-entry story-focus">
+        <h3>🎯 Current Focus</h3>
+        <p>${focus === 'business' ? 'Building money-making tools and revenue streams.' : 
+            focus === 'agents' ? 'Creating AI agent modules.' :
+            focus === 'crypto' ? 'Developing crypto analysis tools.' :
+            focus === 'build' ? 'Building core system modules.' :
+            'General evolution — improving everything.'}</p>
+    </div>`;
+    
+    // Progress bar for phase
+    const moduleGoal = 6;
+    const bizGoal = 6;
+    const moduleProgress = Math.min((modules.length / moduleGoal) * 100, 100);
+    const bizProgress = Math.min((business.length / bizGoal) * 100, 100);
+    
+    html += `<div class="story-entry">
+        <h3>📊 Progress</h3>
+        <div class="story-progress">
+            <label>Core Modules</label>
+            <div class="progress-track"><div class="progress-fill" style="width:${moduleProgress}%"></div></div>
+            <span>${modules.length}/${moduleGoal}</span>
+        </div>
+        <div class="story-progress">
+            <label>Business Tools</label>
+            <div class="progress-track"><div class="progress-fill business" style="width:${bizProgress}%"></div></div>
+            <span>${business.length}/${bizGoal}</span>
+        </div>
+    </div>`;
+    
+    return html;
 }
 
 // ─── UTILS ───
@@ -422,6 +539,6 @@ async function fetchText(path) {
 // ─── INIT ───
 document.addEventListener('DOMContentLoaded', () => {
     loadStatus();
-    addChatMsg('bude', `BudE OS v0.2 online. Repo: ${GITHUB_FULL}.`);
-    addChatMsg('bude', 'Tap AUTO WORK to start autonomous evolution, or type /help for commands.');
+    addChatMsg('bude', `BudE OS v0.3 online. Repo: ${GITHUB_FULL}.`);
+    addChatMsg('bude', 'Tap AUTO WORK to evolve, or type /help. Check the Evolution Log for the story!');
 });
