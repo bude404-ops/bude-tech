@@ -1,5 +1,5 @@
 import pandas as pd
 # Generate trading signals (simulation only)
 # Track potential earnings in code comments
-# Use free APIs only
-# Output valid JSON
+# $1000 investment, 10% daily return
+# Potential earnings: $1100
