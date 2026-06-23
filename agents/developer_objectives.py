@@ -1,2 +1,3 @@
 import os
-# Developer objectives implementation
+# Developer objectives
+# ...
