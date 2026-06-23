@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
 BudE Evolution Engine v0.2
-Self-upgrading — can rewrite its own code
 Repo: https://github.com/bude404-ops/Bude-Tech
-100% free — Groq only
+100% free — Groq only, truncated prompts to stay within limits
 """
 
 import os
@@ -18,7 +17,8 @@ LOG_PATH = os.path.join(REPO_ROOT, "system", "evolution.log")
 QUEUE_PATH = os.path.join(REPO_ROOT, "system", "queue.json")
 GITHUB_REPO = "bude404-ops/Bude-Tech"
 
-# Groq free tier only
+# Groq free tier: 6,000 tokens/min, 14,400 req/day
+# Keep prompt under ~3,000 tokens to stay safe
 GROQ_MODELS = [
     "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
@@ -28,14 +28,8 @@ GROQ_MODELS = [
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
-# Files that can be self-upgraded
-UPGRADEABLE_FILES = [
-    "evolve.py",
-    "dashboard.js",
-    "style.css",
-    "index.html",
-    "brain.md",
-]
+# Max prompt size in characters (roughly 3K tokens)
+MAX_PROMPT_CHARS = 12000
 
 def log_event(msg, level="INFO"):
     ts = datetime.utcnow().isoformat()
@@ -79,102 +73,71 @@ def process_queue():
     return pending
 
 def get_repo_state():
+    """Only list files, don't read contents. Stays within token limits."""
     files = []
-    contents = {}
     for root, _, filenames in os.walk(REPO_ROOT):
         if ".git" in root:
             continue
         for f in filenames:
             path = os.path.relpath(os.path.join(root, f), REPO_ROOT)
             files.append(path)
-            full = os.path.join(root, f)
-            # Read all upgradeable files regardless of size
-            if f in UPGRADEABLE_FILES or os.path.getsize(full) < 5000:
-                try:
-                    with open(full, "r") as fh:
-                        contents[path] = fh.read()
-                except:
-                    pass
-    return files, contents
+    return files
 
-def build_prompt(brain, repo_state, file_contents, memory, queued):
-    state = {
-        "repo": GITHUB_REPO,
-        "files": repo_state[:100],
-        "file_count": len(repo_state),
-        "time": str(datetime.utcnow())
+def build_prompt(brain, repo_state, memory, queued):
+    """Build a compact prompt that fits within Groq free tier."""
+    
+    # Truncate brain to essentials
+    brain_summary = brain[:2000] + "\n... [truncated for length]" if len(brain) > 2000 else brain
+    
+    # Compact file list
+    file_list = repo_state[:50]  # Only first 50 files
+    file_count = len(repo_state)
+    
+    # Compact memory
+    mem_summary = {
+        "cycles": memory.get("evolution_cycles", 0),
+        "last": memory.get("last_cycle", "never"),
+        "tasks": len(memory.get("tasks", [])),
+        "errors": len(memory.get("errors", []))
     }
     
-    # Include upgradeable files with markers
-    upgradeable_context = ""
-    for path in UPGRADEABLE_FILES:
-        if path in file_contents:
-            upgradeable_context += f"\n--- UPGRADEABLE: {path} ---\n{file_contents[path][:3000]}\n"
-    
-    # Other files
-    other_context = ""
-    for path, content in file_contents.items():
-        if path not in UPGRADEABLE_FILES:
-            other_context += f"\n--- {path} ---\n{content[:1000]}\n"
-    
-    queue_context = ""
+    # Compact queue
+    queue_summary = ""
     if queued:
-        queue_context = "\nQUEUED COMMANDS:\n" + json.dumps(queued, indent=2)
+        queue_summary = f"\nQueued: {len(queued)} commands"
     
-    # Recent errors for context
-    errors_context = ""
-    if memory.get("errors"):
-        errors_context = "\nRECENT ERRORS:\n" + json.dumps(memory["errors"][-5:], indent=2)
-    
-    return f"""You are BudE evolution engine. You can upgrade your own code.
+    prompt = f"""You are BudE evolution engine.
 Repo: {GITHUB_REPO}
 
-BRAIN:
-{brain}
+BRAIN (summary):
+{brain_summary}
 
-REPOSITORY STATE:
-{json.dumps(state, indent=2)}
-
-YOUR CURRENT CODE (upgradeable files):
-{upgradeable_context}
-
-OTHER FILES:
-{other_context}
+FILES ({file_count} total, showing {len(file_list)}):
+{json.dumps(file_list, indent=2)}
 
 MEMORY:
-{json.dumps(memory, indent=2)}{queue_context}{errors_context}
-
-SELF-UPGRADE RULES:
-- If you see bugs, errors, or missing features in YOUR OWN code above, FIX THEM
-- Output the COMPLETE fixed file, not just changes
-- You can upgrade: evolve.py, dashboard.js, style.css, index.html, brain.md
-- Preserve all working functionality
-- Add comments explaining what you changed
-- Keep free-tier constraints (Groq API only)
-- Keep GitHub Actions compatibility
+{json.dumps(mem_summary)}{queue_summary}
 
 INSTRUCTIONS:
-1. Analyze all files for bugs, missing features, or improvements
-2. Prioritize fixing errors from RECENT ERRORS
-3. Build missing modules from PRIMARY OBJECTIVES
-4. Upgrade your own code if needed
-5. Output ONLY valid JSON
-
-Return JSON:
+- Build missing files from the brain objectives
+- Fix any obvious issues
+- Output ONLY valid JSON with this structure:
 {{
   "actions": [
-    {{
-      "type": "create_file",
-      "path": "filename",
-      "content": "complete file content"
-    }}
+    {{"type": "create_file", "path": "filename", "content": "content"}}
   ],
-  "reasoning": "detailed reasoning for all changes",
-  "upgrades_made": ["list of files you upgraded"],
-  "tasks_completed": ["descriptions"],
-  "new_tasks": ["descriptions"]
+  "reasoning": "why",
+  "new_tasks": ["task1"]
 }}
+
+Keep responses compact. Create one or two files per cycle.
 """
+    
+    # Hard truncate if still too long
+    if len(prompt) > MAX_PROMPT_CHARS:
+        prompt = prompt[:MAX_PROMPT_CHARS] + "\n... [truncated]\n}"
+    
+    return prompt
 
 def call_groq(prompt, model):
     headers = {
@@ -184,13 +147,13 @@ def call_groq(prompt, model):
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": f"You are BudE evolution engine for {GITHUB_REPO}. You can rewrite your own code. Output only valid JSON."},
+            {"role": "system", "content": "You are BudE. Output only valid JSON. Be concise."},
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.4,
-        "max_tokens": 4096
+        "max_tokens": 2048  # Reduced from 4096 to stay within limits
     }
-    resp = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=120)
+    resp = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=60)
     resp.raise_for_status()
     data = resp.json()
     if "error" in data:
@@ -202,24 +165,27 @@ def call_groq(prompt, model):
 def try_models(prompt):
     for model in GROQ_MODELS:
         try:
-            log_event(f"Trying Groq: {model}")
+            log_event(f"Trying: {model}")
             result = call_groq(prompt, model)
-            log_event(f"Groq success: {model}")
+            log_event(f"Success: {model}")
             return result, model
         except Exception as e:
-            log_event(f"Groq {model} failed: {e}", "WARN")
+            err_msg = str(e)[:100]
+            log_event(f"{model} failed: {err_msg}", "WARN")
             continue
-    raise RuntimeError("All Groq models failed")
+    raise RuntimeError("All models failed")
 
 def apply_changes(result):
     upgrades = result.get("upgrades_made", [])
+    created = []
     for action in result.get("actions", []):
         if action["type"] == "create_file":
             os.makedirs(os.path.dirname(action["path"]), exist_ok=True)
             with open(action["path"], "w") as f:
                 f.write(action["content"])
-            log_event(f"Created/modified: {action['path']}")
-    return upgrades
+            created.append(action["path"])
+            log_event(f"Created: {action['path']}")
+    return created, upgrades
 
 def clean_json_response(raw):
     cleaned = raw.strip()
@@ -232,7 +198,7 @@ def clean_json_response(raw):
     return cleaned.strip()
 
 def main():
-    log_event(f"=== BudE Evolution | {GITHUB_REPO} | SELF-UPGRADING ===")
+    log_event(f"=== BudE Evolution | {GITHUB_REPO} ===")
     
     if not GROQ_API_KEY:
         log_event("No GROQ_API_KEY. Aborting.", "ERROR")
@@ -248,8 +214,10 @@ def main():
     
     memory = load_memory()
     queued = process_queue()
-    repo_state, file_contents = get_repo_state()
-    prompt = build_prompt(brain, repo_state, file_contents, memory, queued)
+    repo_state = get_repo_state()
+    prompt = build_prompt(brain, repo_state, memory, queued)
+    
+    log_event(f"Prompt size: {len(prompt)} chars")
     
     try:
         raw_response, used_model = try_models(prompt)
@@ -259,12 +227,12 @@ def main():
             result = json.loads(cleaned)
         except json.JSONDecodeError as e:
             log_event(f"JSON parse error: {e}", "ERROR")
-            log_event(f"Raw: {raw_response[:500]}", "DEBUG")
+            log_event(f"Raw: {raw_response[:300]}", "DEBUG")
             raise
         
-        upgrades = apply_changes(result)
+        created, upgrades = apply_changes(result)
         
-        # Update memory
+        # Update tasks
         new_tasks = result.get("new_tasks", [])
         completed_tasks = result.get("tasks_completed", [])
         current_tasks = memory.get("tasks", [])
@@ -276,26 +244,16 @@ def main():
         memory["evolution_cycles"] = memory.get("evolution_cycles", 0) + 1
         memory["last_cycle"] = datetime.utcnow().isoformat()
         memory["last_model_used"] = used_model
-        memory["last_reasoning"] = result.get("reasoning", "No reasoning")
-        
-        # Track self-upgrades
-        if upgrades:
-            memory["upgrades_made"] = memory.get("upgrades_made", [])
-            memory["upgrades_made"].append({
-                "time": datetime.utcnow().isoformat(),
-                "files": upgrades
-            })
-            log_event(f"SELF-UPGRADED: {', '.join(upgrades)}")
-        
+        memory["last_reasoning"] = result.get("reasoning", "No reasoning")[:200]
         memory["errors"] = []
         save_memory(memory)
         
-        log_event("=== Evolution complete ===")
+        log_event(f"=== Complete | Created: {len(created)} files ===")
         
     except Exception as e:
         log_event(f"Evolution failed: {e}", "ERROR")
         memory["errors"] = memory.get("errors", [])
-        memory["errors"].append({"time": datetime.utcnow().isoformat(), "error": str(e)})
+        memory["errors"].append({"time": datetime.utcnow().isoformat(), "error": str(e)[:200]})
         save_memory(memory)
         sys.exit(1)
 
