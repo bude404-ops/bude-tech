@@ -1,1 +1,0 @@
-Build api/revenue_tracker.py now. Use Solana RPC to check wallet AnJDRjTaxtRbqYazSkRjLm1Y2jSfuCmHJhygKiNyrKmx balance. Do NOT rebuild any existing files.
