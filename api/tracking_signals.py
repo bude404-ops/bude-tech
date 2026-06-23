@@ -1,4 +1,9 @@
 import requests
+
 # Track affiliate link performance
-# Track potential earnings: $500
-# Use free API: Google Analytics
+def track_signals():
+    # TODO: implement tracking logic
+    pass
+
+# Use free APIs only
+# TODO: integrate with free APIs
