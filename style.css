@@ -49,6 +49,59 @@ header h1 {
     border-color: #ff4444;
 }
 
+/* AUTO WORK BAR */
+.auto-work-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #0d0d1a;
+    border: 2px solid #444;
+    border-radius: 8px;
+}
+
+.auto-work-btn {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-family: inherit;
+    font-weight: bold;
+    border: 2px solid #ff4444;
+    background: #1a0000;
+    color: #ff4444;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s;
+    min-width: 180px;
+}
+
+.auto-work-btn:hover {
+    transform: scale(1.05);
+}
+
+.auto-work-btn.active {
+    border-color: #00ff88;
+    background: #001a0d;
+    color: #00ff88;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+}
+
+.auto-work-status {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.auto-work-status.working {
+    color: #00ff88;
+}
+
+/* TABS */
 .tabs {
     display: flex;
     gap: 0.5rem;
@@ -233,5 +286,9 @@ pre {
     }
     .chat-box {
         height: 300px;
+    }
+    .auto-work-bar {
+        flex-direction: column;
+        text-align: center;
     }
 }
