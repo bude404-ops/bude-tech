@@ -1,2 +1,2 @@
 import os
-# new crypto analyst agent implementation
+print('New crypto analyst agent created')
