@@ -25,7 +25,6 @@ function toggleAutoWork() {
     const status = document.getElementById('auto-work-status');
     
     if (isAutoWorking) {
-        // STOP
         clearInterval(autoWorkInterval);
         autoWorkInterval = null;
         isAutoWorking = false;
@@ -35,7 +34,6 @@ function toggleAutoWork() {
         status.classList.remove('working');
         addChatMsg('bude', 'AUTO WORK stopped.');
     } else {
-        // START
         isAutoWorking = true;
         btn.textContent = 'AUTO WORK: ON';
         btn.classList.add('active');
@@ -43,46 +41,83 @@ function toggleAutoWork() {
         status.classList.add('working');
         addChatMsg('bude', 'AUTO WORK started! Running evolution cycles...');
         
-        // Run immediately
         runEvolutionCycle();
-        
-        // Then every 30 seconds
         autoWorkInterval = setInterval(runEvolutionCycle, 30000);
     }
 }
 
 async function runEvolutionCycle() {
-    addChatMsg('bude', `[${new Date().toLocaleTimeString()}] Triggering evolution cycle...`);
+    const time = new Date().toLocaleTimeString();
+    addChatMsg('bude', `[${time}] Triggering evolution cycle...`);
+    showProgress(true);
     
     try {
-        // Try to trigger GitHub Actions workflow_dispatch
         const triggered = await triggerGitHubWorkflow();
         
         if (triggered) {
             addChatMsg('bude', 'Evolution cycle queued on GitHub Actions.');
+            await checkCommits();
         } else {
-            // Fallback: simulate local evolution
             addChatMsg('bude', 'GitHub trigger failed. Simulating local task generation...');
             simulateLocalEvolution();
         }
         
-        // Refresh displays
         loadStatus();
         loadTasks();
         
     } catch (e) {
         addChatMsg('bude', `Cycle error: ${e.message}`, 'ERROR');
+    } finally {
+        showProgress(false);
+    }
+}
+
+function showProgress(show) {
+    let bar = document.getElementById('progress-bar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'progress-bar';
+        bar.className = 'progress-bar';
+        bar.innerHTML = '<div class="progress-fill"></div>';
+        document.querySelector('.auto-work-bar').appendChild(bar);
+    }
+    bar.style.display = show ? 'block' : 'none';
+    if (show) {
+        bar.querySelector('.progress-fill').style.width = '0%';
+        setTimeout(() => bar.querySelector('.progress-fill').style.width = '100%', 100);
+    }
+}
+
+async function checkCommits() {
+    try {
+        const resp = await fetch(`https://api.github.com/repos/${GITHUB_FULL}/commits?per_page=5`);
+        const commits = await resp.json();
+        
+        const feed = document.getElementById('commit-feed');
+        if (feed) {
+            feed.innerHTML = commits.map(c => `
+                <div class="commit-item">
+                    <span class="commit-msg">${escapeHtml(c.commit.message)}</span>
+                    <span class="commit-time">${timeAgo(c.commit.committer.date)}</span>
+                </div>
+            `).join('');
+        }
+        
+        // Check if latest commit is from BudE
+        const latest = commits[0];
+        if (latest?.commit?.message?.includes('BudE evolution')) {
+            addChatMsg('bude', `New code deployed! ${latest.commit.message}`);
+        }
+        
+    } catch (e) {
+        console.log('Commit check failed', e);
     }
 }
 
 async function triggerGitHubWorkflow() {
-    // This requires a GitHub personal access token with repo scope
-    // For now, we simulate the trigger
-    // In production, you'd call GitHub API here
-    
     const token = localStorage.getItem('github_token');
     if (!token) {
-        addChatMsg('bude', 'No GitHub token stored. Add one with /token <your_token>');
+        addChatMsg('bude', 'No GitHub token. Add one with /token <key> or cycles run on schedule only.');
         return false;
     }
     
@@ -102,13 +137,13 @@ async function triggerGitHubWorkflow() {
 }
 
 function simulateLocalEvolution() {
-    // When GitHub isn't reachable, generate tasks locally
     const tasks = [
         "Analyze current repo structure",
         "Identify missing dashboard components",
         "Plan next agent module",
         "Review evolution logs for errors",
-        "Optimize existing code"
+        "Optimize existing code",
+        "Check for self-upgrade opportunities"
     ];
     const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
     queueTask(`[AUTO] ${randomTask}`);
@@ -149,6 +184,7 @@ function handleCommand(cmd) {
 /agent <type> — request agent module
 /crypto <wallet> — analyze Solana wallet
 /log — show evolution log
+/commits — show recent commits
 /token <key> — store GitHub token
 /repo — open GitHub repo
 /clear — clear chat`);
@@ -212,6 +248,11 @@ function handleCommand(cmd) {
             loadEvolution();
             switchTab('evolution');
             addChatMsg('bude', 'Evolution log loaded.');
+            break;
+            
+        case 'commits':
+            checkCommits();
+            addChatMsg('bude', 'Loading recent commits...');
             break;
             
         case 'token':
@@ -288,9 +329,7 @@ async function saveQueue(queue) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(queue)
         });
-    } catch (e) {
-        // API not running, localStorage fallback
-    }
+    } catch (e) {}
 }
 
 // ─── SYSTEM STATUS ───
@@ -305,6 +344,7 @@ async function loadStatus() {
         const model = mem?.last_model_used || 'None';
         const errors = mem?.errors?.length || 0;
         const queue = (await loadQueue()).length;
+        const upgrades = mem?.upgrades_made?.length || 0;
         
         grid.innerHTML = `
             <div class="status-card">
@@ -324,12 +364,12 @@ async function loadStatus() {
                 <div class="value" style="color:${queue>0?'#ffaa00':'#00ff88'}">${queue}</div>
             </div>
             <div class="status-card">
-                <h3>Errors</h3>
-                <div class="value" style="color:${errors>0?'#ff4444':'#00ff88'}">${errors}</div>
+                <h3>Self-Upgrades</h3>
+                <div class="value" style="color:${upgrades>0?'#00ff88':'#888'}">${upgrades}</div>
             </div>
             <div class="status-card">
-                <h3>Auto Work</h3>
-                <div class="value" style="color:${isAutoWorking?'#00ff88':'#ff4444'};font-size:1rem">${isAutoWorking?'ON':'OFF'}</div>
+                <h3>Errors</h3>
+                <div class="value" style="color:${errors>0?'#ff4444':'#00ff88'}">${errors}</div>
             </div>
         `;
         
@@ -424,6 +464,7 @@ async function fetchText(path) {
 // ─── INIT ───
 document.addEventListener('DOMContentLoaded', () => {
     loadStatus();
+    checkCommits();
     addChatMsg('bude', `BudE OS v0.2 online. Repo: ${GITHUB_FULL}.`);
     addChatMsg('bude', 'Tap AUTO WORK to start autonomous evolution, or type /help for commands.');
 });
