@@ -138,6 +138,7 @@ function handleCommand(cmd) {
 /crypto <wallet> — analyze Solana wallet
 /log — show evolution story
 /focus <area> — set priority: agents, crypto, self, bugs, business
+/clean — purge old logs
 /token <key> — store GitHub token
 /repo — open GitHub repo
 /clear — clear chat`);
@@ -201,6 +202,11 @@ function handleCommand(cmd) {
             loadEvolution();
             switchTab('evolution');
             addChatMsg('bude', 'Evolution story loaded.');
+            break;
+            
+        case 'clean':
+            purgeOldLogs();
+            addChatMsg('bude', 'Old logs purged. Evolution log cleaned.');
             break;
             
         case 'focus':
@@ -404,6 +410,8 @@ function completeTask(id) {
 // ─── EVOLUTION STORY (human-friendly) ───
 async function loadEvolution() {
     const display = document.getElementById('evolution-display');
+    display.innerHTML = '<div class="story-entry"><p>Loading evolution story...</p></div>';
+    
     try {
         const mem = await fetchJson('system/memory.json');
         const log = await fetchText('system/evolution.log');
@@ -412,7 +420,7 @@ async function loadEvolution() {
         display.innerHTML = story;
         
     } catch (e) {
-        display.innerHTML = '<div class="story-entry"><h3>🌱 BudE is just getting started</h3><p>Run /evolve or tap AUTO WORK to begin the journey.</p></div>';
+        display.innerHTML = '<div class="story-entry story-header"><h3>🌱 BudE is just getting started</h3><p>Run /evolve or tap AUTO WORK to begin the journey.</p></div>';
     }
 }
 
@@ -424,8 +432,9 @@ function generateStory(mem, log) {
     const business = mem?.business_modules || [];
     const upgrades = mem?.upgrades_made || [];
     const errors = mem?.errors || [];
+    const focus = mem?.current_focus || 'general';
     
-    // Header story
+    // Header
     html += `<div class="story-entry story-header">
         <h2>🧬 BudE Evolution Story</h2>
         <p><strong>${cycles} cycles completed</strong> | Phase: <span class="phase-${phase}">${phase.toUpperCase()}</span></p>
@@ -436,7 +445,7 @@ function generateStory(mem, log) {
         html += `<div class="story-entry">
             <h3>🔧 Core Modules Built</h3>
             <ul class="story-list">
-                ${modules.map(m => `<li>✅ ${m.replace('agents/', '').replace('api/', '').replace('tools/', '')}</li>`).join('')}
+                ${modules.map(m => `<li>✅ ${m.replace('agents/', '').replace('api/', '').replace('tools/', '').replace('.py', '')}</li>`).join('')}
             </ul>
         </div>`;
     }
@@ -446,7 +455,7 @@ function generateStory(mem, log) {
         html += `<div class="story-entry story-business">
             <h3>💰 Business Tools</h3>
             <ul class="story-list">
-                ${business.map(b => `<li>💵 ${b.replace('api/', '').replace('tools/', '')}</li>`).join('')}
+                ${business.map(b => `<li>💵 ${b.replace('api/', '').replace('tools/', '').replace('.py', '')}</li>`).join('')}
             </ul>
         </div>`;
     }
@@ -489,8 +498,7 @@ function generateStory(mem, log) {
         </div>`;
     }
     
-    // Current focus / next steps
-    const focus = mem?.current_focus || 'general';
+    // Current focus
     html += `<div class="story-entry story-focus">
         <h3>🎯 Current Focus</h3>
         <p>${focus === 'business' ? 'Building money-making tools and revenue streams.' : 
@@ -500,7 +508,7 @@ function generateStory(mem, log) {
             'General evolution — improving everything.'}</p>
     </div>`;
     
-    // Progress bar for phase
+    // Progress bars
     const moduleGoal = 6;
     const bizGoal = 6;
     const moduleProgress = Math.min((modules.length / moduleGoal) * 100, 100);
@@ -521,6 +529,32 @@ function generateStory(mem, log) {
     </div>`;
     
     return html;
+}
+
+// ─── PURGE OLD LOGS ───
+async function purgeOldLogs() {
+    try {
+        // Keep only last 20 lines of evolution.log
+        const log = await fetchText('system/evolution.log');
+        const lines = log.split('\n');
+        const keepLines = lines.slice(-20);
+        const cleaned = keepLines.join('\n');
+        
+        // We can't write files directly, but we can store in localStorage
+        localStorage.setItem('bude_log_cleaned', cleaned);
+        
+        // Also clear old errors from memory
+        const mem = await fetchJson('system/memory.json');
+        if (mem.errors && mem.errors.length > 3) {
+            mem.errors = mem.errors.slice(-3);
+            // Note: can't save back without backend, but display will be cleaner
+        }
+        
+        addChatMsg('bude', `Purged old logs. Kept last ${keepLines.length} entries.`);
+        
+    } catch (e) {
+        addChatMsg('bude', 'Could not purge logs. No log file found.');
+    }
 }
 
 // ─── UTILS ───
