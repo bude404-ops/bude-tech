@@ -1,3 +1,3 @@
 import pandas as pd
-# generate trading signals (simulation only)
-# track potential earnings: $1000/day
+# Generate trading signals (simulation only)
+# Potential earnings: $1000/month
