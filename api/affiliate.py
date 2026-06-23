@@ -1,6 +1,5 @@
 import requests
-# Track affiliate link performance
-# Potential earnings: $500/month
-# Free API: HuggingFace
-# Track potential earnings in code comments
-print('Affiliate link performance tracked successfully')
+
+def track_affiliate_performance():
+    # Track affiliate link performance
+    return requests.get("https://api.example.com/affiliate")
