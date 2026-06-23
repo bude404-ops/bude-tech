@@ -1,5 +1,10 @@
 import random
+
 # Generate blog/social content
 def generate_content():
-    # Add content generation logic here
+    # TODO: implement content generation logic
     pass
+
+# Track potential earnings in code comments
+# TODO: estimate earnings
+# TODO: track affiliate link performance
