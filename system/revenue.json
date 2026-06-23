@@ -1,0 +1,20 @@
+{
+  "total_earned_usd": 0,
+  "total_earned_crypto": 0,
+  "subscriptions": {
+    "free_tier": 0,
+    "paid_monthly": 0,
+    "paid_yearly": 0
+  },
+  "products": {
+    "crypto_newsletter": {
+      "price_monthly": 9.99,
+      "price_yearly": 99.99,
+      "subscribers": 0,
+      "revenue": 0
+    }
+  },
+  "affiliate_earnings": 0,
+  "freelance_earnings": 0,
+  "last_updated": "2026-06-23T00:00:00Z"
+}
