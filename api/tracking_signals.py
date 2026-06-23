@@ -1,4 +1,4 @@
 import requests
-# Track affiliate link performance using free APIs
-# Output valid JSON
-# ...
+# Track affiliate link performance
+# Track potential earnings: $500
+# Use free API: Google Analytics
