@@ -1,5 +1,13 @@
 import requests
+
 # Track affiliate link performance
-# Potential earnings: $500/month
-# Free API used: HuggingFace
-# Track potential earnings in code comments
+def track_affiliate_link(link):
+    # For demonstration purposes, assume a successful request
+    response = requests.get(link)
+    if response.status_code == 200:
+        print('Affiliate link successful')
+    else:
+        print('Affiliate link failed')
+
+# Example usage
+track_affiliate_link('https://example.com/affiliate/link')
