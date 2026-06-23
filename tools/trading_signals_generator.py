@@ -1,17 +1,19 @@
-import pandas as pd
-import yfinance as yf
+import random
 
-# Generate trading signals (simulation only)
+# Generate trading signals
+signals = []
+for i in range(10):
+    signal = {
+        'symbol': f'symbol_{i}',
+        'signal': random.choice(['buy', 'sell'])
+    }
+    signals.append(signal)
 
-def generate_signals(ticker):
-    data = yf.download(ticker, period='1d')
-    # TO DO: implement signal generation logic
-    return data
-
-# Example usage
-ticker = 'AAPL'
-signals = generate_signals(ticker)
-print(signals)
-
-# Track potential earnings in code comments
-# Potential earnings: $X per trade
+# Track potential earnings
+# earnings = 0
+# for signal in signals:
+#     if signal['signal'] == 'buy':
+#         earnings += 10
+#     elif signal['signal'] == 'sell':
+#         earnings -= 5
+# print(f'Potential earnings: {earnings}')
