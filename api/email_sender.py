@@ -4,24 +4,25 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 # Email configuration
-SMTP_SERVER = 'smtp.gmail.com'
-SMTP_PORT = 587
-FROM_EMAIL = 'your-email@gmail.com'
-PASSWORD = 'your-password'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USERNAME = 'your_email@gmail.com'
+EMAIL_PASSWORD = 'your_password'
 
-def send_email(recipient, subject, body):
+# Function to send email
+def send_email(subject, message, to):
     msg = MIMEMultipart()
-    msg['From'] = FROM_EMAIL
-    msg['To'] = recipient
+    msg['From'] = EMAIL_USERNAME
+    msg['To'] = to
     msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
+    msg.attach(MIMEText(message, 'plain'))
 
-    server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+    server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
     server.starttls()
-    server.login(FROM_EMAIL, PASSWORD)
+    server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
     text = msg.as_string()
-    server.sendmail(FROM_EMAIL, recipient, text)
+    server.sendmail(EMAIL_USERNAME, to, text)
     server.quit()
 
 # Example usage
-send_email('recipient-email@gmail.com', 'Daily Newsletter', 'Hello, this is your daily newsletter.')
+send_email('Daily Newsletter', 'Hello, this is your daily newsletter.', 'recipient@example.com')
