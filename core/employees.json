@@ -1,0 +1,18 @@
+{
+  "builder_1": {
+    "role": "frontend",
+    "tasks": 0
+  },
+  "builder_2": {
+    "role": "backend",
+    "tasks": 0
+  },
+  "qa_1": {
+    "role": "tester",
+    "tasks": 0
+  },
+  "analyst_1": {
+    "role": "logic",
+    "tasks": 0
+  }
+}
