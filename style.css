@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0b0d10;
+  color: white;
+}
+
+.card {
+  background: #151922;
+  margin: 10px;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  background: #151922;
+}
+
+.nav button {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  background: none;
+  color: white;
+}
