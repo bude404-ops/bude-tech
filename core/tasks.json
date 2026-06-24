@@ -7,5 +7,13 @@
     "assigned_to": "builder_1",
     "status": "done",
     "result": "fallback"
+  },
+  {
+    "id": "2026-06-24T18:23:53.310539",
+    "task": "optimize system",
+    "type": "build",
+    "priority": "medium",
+    "assigned_to": "builder_1",
+    "status": "pending"
   }
 ]
