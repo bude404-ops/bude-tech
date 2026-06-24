@@ -1,0 +1,35 @@
+name: BudE V9 Workforce OS
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */4 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Workforce OS
+        run: python brain.py
+
+      - name: Commit updates
+        run: |
+          git config user.name "bude-v9"
+          git config user.email "v9@bude.ai"
+          git add .
+          git commit -m "V9 workforce cycle" || echo "no changes"
+          git push
