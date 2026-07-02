@@ -1,0 +1,29 @@
+name: BudE Brain Loop
+
+on:
+  workflow_dispatch:
+  push:
+  schedule:
+    - cron: "*/10 * * * *"
+
+jobs:
+  brain:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Brain Cycle
+        run: python seed.py
+
+      - name: Commit updates
+        run: |
+          git config user.name "bude-ai"
+          git config user.email "bot@bude.ai"
+          git add .
+          git commit -m "BudE brain cycle" || exit 0
+          git push
