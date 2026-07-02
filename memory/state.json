@@ -1,9 +1,16 @@
 {
-  "messages": [],
-  "cycle": 0,
-  "active_task": "booting",
+  "messages": [
+    {
+      "role": "bude",
+      "content": "Analyzing system performance..."
+    }
+  ],
+  "cycle": 1,
+  "active_task": "Idle analysis",
   "mode": "idle",
   "revenue_sol": 0,
   "products": [],
-  "logs": []
+  "logs": [
+    "Analyzing system performance..."
+  ]
 }
